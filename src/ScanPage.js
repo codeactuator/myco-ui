@@ -189,7 +189,11 @@ const ScanPage = () => {
 			const res = await fetch(`${API_BASE_URL}/v1/call`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ userId: ownerId, mobileNumber, capturedImages }),
+				body: JSON.stringify({
+				fromUserId: userId,
+				toUserId: ownerId,
+				mobileNumber,
+				capturedImages }),
 			});
 			if (res.ok && (await uploadCapturedImage())) {
 				const data = await res.json();
@@ -301,7 +305,7 @@ const ScanPage = () => {
 							)}
 
 							{isUploaded && (
-								<button className="btn btn-danger" onClick={handleButtonClick}>
+								<button className="btn btn-danger" onClick={makeCallToOwner}>
 									📞 Emergency Call
 								</button>
 							)}
