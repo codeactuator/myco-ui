@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
 import API_BASE_URL from './config';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+
+import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
+
+const mapContainerStyle = {
+  width: '100%',
+  height: '200px',
+};
 
 const NotificationPage = () => {
   const [posts, setPosts] = useState([]);
@@ -13,6 +19,7 @@ const NotificationPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [visibleSections, setVisibleSections] = useState({});
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -20,6 +27,11 @@ const NotificationPage = () => {
 
   const stompClientRef = useRef(null);
   const subscribedPostIdsRef = useRef(new Set());
+
+  // Load Google Maps script
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: "AIzaSyAzCNCNbdAejKSgQrUgkshTJ_gapr6aioc", // <-- Replace with your API key
+  });
 
   useEffect(() => {
     fetchPosts();
@@ -65,8 +77,9 @@ const NotificationPage = () => {
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/v1/posts/for-user/${userId}`);
+      const res = await fetch(`${API_BASE_URL}/v1/posts/by-user/${userId}`);
       const data = await res.json();
+	  console.log(data);
 
       const postsWithImages = await Promise.all(data.map(async (post) => {
         const imagesRes = await fetch(`${API_BASE_URL}/v1/posts/${post.id}/files`);
@@ -102,7 +115,7 @@ const NotificationPage = () => {
       const res = await fetch(`${API_BASE_URL}/v1/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: newComment, commentedBy: userId, postId: postId}),
+        body: JSON.stringify({ text: newComment, commentedBy: userId, postId: postId }),
       });
       if (res.ok) {
         setNewComment('');
@@ -202,12 +215,22 @@ const NotificationPage = () => {
                 <div className="card-body">
                   {visibleSections[post.id]?.map && post.latitude && post.longitude && (
                     <div style={{ height: '200px' }} className="mb-3">
-                      <MapContainer center={[post.latitude, post.longitude]} zoom={13} style={{ height: '100%' }}>
-                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                        <Marker position={[post.latitude, post.longitude]}>
-                          <Popup>{post.location || 'Location'}</Popup>
-                        </Marker>
-                      </MapContainer>
+                      {!isLoaded ? (
+                        <p>Loading map...</p>
+                      ) : loadError ? (
+                        <p>Error loading map</p>
+                      ) : (
+                        <GoogleMap
+                          mapContainerStyle={mapContainerStyle}
+                          center={{ lat: post.latitude, lng: post.longitude }}
+                          zoom={13}
+                        >
+                          <Marker
+                            position={{ lat: post.latitude, lng: post.longitude }}
+                            title={post.location || 'Location'}
+                          />
+                        </GoogleMap>
+                      )}
                     </div>
                   )}
 
