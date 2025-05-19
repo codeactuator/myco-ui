@@ -179,6 +179,10 @@ const NotificationPage = () => {
                     })}
                   </h6>
                   <p className="card-text text-muted mb-2">{post.description}</p>
+				  <button onClick={() => navigate(`/notification-details/${post.id}`)}>
+					  View Details
+				  </button>
+
                 </div>
 
                 <div className="position-relative">

@@ -12,6 +12,8 @@ import ScanPage from "./ScanPage";
 import ThankYouPage from "./ThankYouPage";
 import PostListPage from "./PostListPage";
 import NotificationPage from "./NotificationPage";
+import NotificationDetailsPage from './NotificationDetailsPage';
+
 
 const App = () => {
   return (
@@ -28,6 +30,7 @@ const App = () => {
 		  <Route path="/posts" element={<PostListPage />} />
 		  <Route path="/np" element={<NotificationPage />} />
 		  <Route path="/thank-you" element={<ThankYouPage />} />
+		  <Route path="/notification-details/:postId" element={<NotificationDetailsPage />} />
 	    </Routes>
       </div>
     </Router>
