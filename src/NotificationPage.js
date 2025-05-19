@@ -179,9 +179,6 @@ const NotificationPage = () => {
                     })}
                   </h6>
                   <p className="card-text text-muted mb-2">{post.description}</p>
-				  <button onClick={() => navigate(`/notification-details/${post.id}`)}>
-					  View Details
-				  </button>
 
                 </div>
 
@@ -193,6 +190,7 @@ const NotificationPage = () => {
                       className="card-img-top"
                       style={{ objectFit: 'cover', height: '200px' }}
                       loading="lazy"
+					  onClick={() => navigate(`/notification-details/${post.id}`)}
                     />
                   ) : (
                     <div className="bg-secondary d-flex justify-content-center align-items-center" style={{ height: '200px' }}>

@@ -45,10 +45,6 @@ const NotificationDetailsPage = () => {
 
   return (
     <div className="container py-4">
-      <button className="btn btn-outline-primary mb-3" onClick={() => navigate(-1)}>
-        ← Back
-      </button>
-
       <div className="card shadow">
         <div className="card-body">
           <h4>{post.postedByName}</h4>
