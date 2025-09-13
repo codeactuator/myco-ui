@@ -16,7 +16,7 @@ spec:
       - name: react-container
         image: gcr.io/myco-ui/ui
         ports:
-        - containerPort: 80
+        - containerPort: 8080
 ---
 apiVersion: v1
 kind: Service
