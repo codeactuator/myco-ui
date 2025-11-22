@@ -1,0 +1,127 @@
+#
+# React Frontend Deployment: myco-ui
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myco-ui-deployment # Updated deployment name
+  labels:
+    app: myco-ui # Updated label for the React app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myco-ui
+  template:
+    metadata:
+      labels:
+        app: myco-ui
+    spec:
+      containers:
+      - name: myco-ui-container # Updated container name
+        # Image from Google Artifact Registry
+        image: us-central1-docker.pkg.dev/myco-ui-478310/myco-repo/myco-ui:latest
+        ports:
+        - containerPort: 80
+
+---
+#
+# React Frontend Service: myco-ui
+#
+apiVersion: v1
+kind: Service
+metadata:
+  name: myco-ui-service # Updated service name
+spec:
+  selector:
+    app: myco-ui # Must match the deployment's pod label
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+
+---
+#
+# Spring Boot Backend Deployment: myco
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myco-deployment # Updated deployment name
+  labels:
+    app: myco # Updated label for the Spring Boot app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myco
+  template:
+    metadata:
+      labels:
+        app: myco
+    spec:
+      containers:
+      - name: myco-container # Updated container name
+        # Replace PROJECT_ID with your Google Cloud Project ID
+        image: us-central1-docker.pkg.dev/myco-ui-478310/myco-repo/myco:latest
+        imagePullPolicy: Always     # force pull every time
+        env:
+        - name: SERVER_PORT
+          value: "8080"
+        - name: FILE_UPLOAD_DIR
+          value: "/uploads"
+        - name: APP_BASE_URL
+          value: "http://34.118.231.252" # IMPORTANT: Replace <INGRESS_IP> with your actual Ingress IP after deployment
+        ports:
+        - containerPort: 8080
+
+---
+#
+# Spring Boot Backend Service: myco
+#
+apiVersion: v1
+kind: Service
+metadata:
+  name: myco-service # Updated service name
+spec:
+  selector:
+    app: myco # Must match the deployment's pod label
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+
+---
+#
+# Ingress for External Access
+#
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myco-ingress # Updated ingress name
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      # Route API calls to the Spring Boot backend first (most specific path)
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: myco-service
+            port:
+              number: 8080
+      # Route all other traffic to the React frontend (default route)
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: myco-ui-service
+            port:
+              number: 80
