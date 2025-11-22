@@ -1,0 +1,14 @@
+steps:
+  # Step 1: Build the container image and tag it for Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - "build"
+      - "-t"
+      - "us-central1-docker.pkg.dev/myco-ui-478310/myco-repo/myco-ui:latest"
+      - "."
+      
+  # Step 2: Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - "push"
+      - "us-central1-docker.pkg.dev/myco-ui-478310/myco-repo/myco-ui:latest"
