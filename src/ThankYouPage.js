@@ -14,7 +14,7 @@ const ThankYouPage = () => {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [navigate]);
+  }, [navigate, userId, mobileNumber]);
 
   return (
     <div className="container d-flex flex-column justify-content-center align-items-center min-vh-100 bg-light text-center">

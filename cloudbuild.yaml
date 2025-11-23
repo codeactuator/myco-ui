@@ -3,6 +3,8 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - "build"
+      - "--build-arg"
+      - "REACT_APP_API_BASE_URL=${_API_URL}"
       - "-t"
       - "us-central1-docker.pkg.dev/myco-ui-478310/myco-repo/myco-ui:latest"
       - "."
@@ -12,3 +14,7 @@ steps:
     args:
       - "push"
       - "us-central1-docker.pkg.dev/myco-ui-478310/myco-repo/myco-ui:latest"
+
+substitutions:
+  # A value MUST be provided for this variable during a real cloud deployment.
+  _API_URL: "http://104.199.184.174:8080/api"

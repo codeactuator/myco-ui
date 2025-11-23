@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import API_BASE_URL from "./config";
 
 const OtpPage = () => {
   const location = useLocation();
@@ -49,7 +50,7 @@ const OtpPage = () => {
     const fullOtp = otp.join("");
 
     try {
-      const response = await fetch("http://localhost:8081/v1/otp/verify", {
+      const response = await fetch(`${API_BASE_URL}/v1/otp/verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
