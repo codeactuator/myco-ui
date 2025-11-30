@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import AnalyticsDashboard from './dashboards/vendor/AnalyticsDashboard';
-import PromotionsPage from './dashboards/vendor/PromotionsPage';
-import FeedbackPage from './dashboards/vendor/FeedbackPage';
+import AnalyticsDashboard from './dashboards/vendor/AnalyticsDashboard'; // Assuming this is the correct path
+import PromotionsPage from './dashboards/vendor/PromotionsPage'; // Assuming this is the correct path
+import FeedbackPage from './dashboards/vendor/FeedbackPage'; // Assuming this is the correct path
+import DashboardLayout from './DashboardLayout';
 
 const VendorView = () => {
   const [activeTab, setActiveTab] = useState('analytics');
@@ -19,30 +20,30 @@ const VendorView = () => {
     }
   };
 
-  return (
-    <div>
-      <ul className="nav nav-tabs mb-4">
-        <li className="nav-item">
-          <button className={`nav-link ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>
-            <i className="bi bi-bar-chart-line-fill me-2"></i>Analytics
-          </button>
-        </li>
-        <li className="nav-item">
-          <button className={`nav-link ${activeTab === 'promotions' ? 'active' : ''}`} onClick={() => setActiveTab('promotions')}>
-            <i className="bi bi-megaphone-fill me-2"></i>Promotions
-          </button>
-        </li>
-        <li className="nav-item">
-          <button className={`nav-link ${activeTab === 'feedback' ? 'active' : ''}`} onClick={() => setActiveTab('feedback')}>
-            <i className="bi bi-star-fill me-2"></i>Feedback & Ratings
-          </button>
-        </li>
-      </ul>
+  const navItems = (
+    <>
+      <li className="nav-item">
+        <a href="#" className={`nav-link text-white ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>
+          <i className="bi bi-bar-chart-line-fill me-2"></i>Analytics
+        </a>
+      </li>
+      <li className="nav-item">
+        <a href="#" className={`nav-link text-white ${activeTab === 'promotions' ? 'active' : ''}`} onClick={() => setActiveTab('promotions')}>
+          <i className="bi bi-megaphone-fill me-2"></i>Promotions
+        </a>
+      </li>
+      <li className="nav-item">
+        <a href="#" className={`nav-link text-white ${activeTab === 'feedback' ? 'active' : ''}`} onClick={() => setActiveTab('feedback')}>
+          <i className="bi bi-star-fill me-2"></i>Feedback & Ratings
+        </a>
+      </li>
+    </>
+  );
 
-      <div>
-        {renderContent()}
-      </div>
-    </div>
+  return (
+    <DashboardLayout panelTitle="Vendor Panel" navItems={navItems}>
+      {renderContent()}
+    </DashboardLayout>
   );
 };
 

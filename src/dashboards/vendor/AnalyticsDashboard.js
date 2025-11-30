@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   GoogleMap, Marker, useLoadScript
 } from '@react-google-maps/api';
@@ -33,7 +33,7 @@ const mapContainerStyle = {
 };
 
 // Mock data for registration locations
-const registrationLocations = [
+const allRegistrationLocations = [
   { lat: 34.0522, lng: -118.2437 }, // Los Angeles, CA
   { lat: 40.7128, lng: -74.0060 },   // New York, NY
   { lat: 29.7604, lng: -95.3698 },   // Houston, TX
@@ -51,55 +51,124 @@ const registrationLocations = [
   { lat: 33.7490, lng: -84.3880 },   // Atlanta, GA
 ];
 
-const AnalyticsDashboard = () => {
-  const registrationData = {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-    datasets: [
-      {
-        label: 'Product Registrations',
-        data: [120, 190, 300, 500, 220, 330],
-        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1,
-      },
-    ],
-  };
+const mockProducts = [
+  { id: 'P01', name: 'Premium Leather Wallet' },
+  { id: 'P02', name: 'City Explorer Backpack' },
+  { id: 'P03', name: 'Traveler\'s Passport Holder' },
+];
 
-  const recoveryData = {
-    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
-    datasets: [
-      {
-        label: 'Item Recovery Rate (%)',
-        data: [85, 88, 92, 90, 95],
-        fill: false,
-        borderColor: 'rgb(75, 192, 192)',
-        tension: 0.1,
-      },
-    ],
-  };
+const qrCodeComparisonData = {
+  labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+  datasets: [
+    {
+      label: 'QR Codes Created',
+      data: [600, 650, 700, 720, 750, 800],
+      backgroundColor: 'rgba(108, 117, 125, 0.6)',
+      borderColor: 'rgba(108, 117, 125, 1)',
+      borderWidth: 1,
+    },
+    {
+      label: 'QR Codes Sold (Registered)',
+      data: [120, 190, 300, 500, 220, 330],
+      backgroundColor: 'rgba(54, 162, 235, 0.6)',
+      borderColor: 'rgba(54, 162, 235, 1)',
+      borderWidth: 1,
+    },
+  ],
+};
+
+const salesForecastData = {
+  labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July (Forecast)', 'August (Forecast)'],
+  datasets: [
+    {
+      label: 'Actual Sales',
+      data: [120, 190, 300, 500, 220, 330, null, null],
+      fill: false,
+      borderColor: 'rgb(75, 192, 192)',
+      tension: 0.1,
+    },
+    {
+      label: 'Forecasted Sales',
+      data: [null, null, null, null, null, 330, 380, 420],
+      fill: false,
+      borderColor: 'rgb(255, 99, 132)',
+      borderDash: [5, 5],
+      tension: 0.1,
+    },
+  ],
+};
+
+const AnalyticsDashboard = () => {
+  const [selectedProduct, setSelectedProduct] = useState('');
+  const [filteredChartData, setFilteredChartData] = useState({ qrCodeComparisonData, salesForecastData });
+  const [filteredLocations, setFilteredLocations] = useState(allRegistrationLocations);
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: 'AIzaSyAzCNCNbdAejKSgQrUgkshTJ_gapr6aioc', // Replace with your actual API key
   });
 
+  useEffect(() => {
+    const product = mockProducts.find(p => `${p.name} (${p.id})` === selectedProduct);
+
+    if (product) {
+      // Simulate fetching filtered data for the selected product
+      // In a real app, you would make an API call with product.id
+      const newQrData = { ...qrCodeComparisonData, datasets: qrCodeComparisonData.datasets.map(ds => ({ ...ds, data: ds.data.map(d => d ? Math.floor(d * 0.4) + 10 : null) })) };
+      const newSalesData = { ...salesForecastData, datasets: salesForecastData.datasets.map(ds => ({ ...ds, data: ds.data.map(d => d ? Math.floor(d * 0.4) + 10 : null) })) };
+      setFilteredChartData({ qrCodeComparisonData: newQrData, salesForecastData: newSalesData });
+      // In a real app, you would filter locations by product ID. Here we just show a subset.
+      setFilteredLocations(allRegistrationLocations.slice(0, 5));
+    } else {
+      // Reset to all data when filter is cleared
+      setFilteredChartData({ qrCodeComparisonData, salesForecastData });
+      setFilteredLocations(allRegistrationLocations);
+    }
+  }, [selectedProduct]);
 
   return (
     <div className="container-fluid">
-      <h4 className="mb-4">Sales & Engagement Analytics</h4>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4 className="mb-0">Sales & Engagement Analytics</h4>
+        <div className="d-flex align-items-center" style={{ minWidth: '300px' }}>
+          <label htmlFor="product-search" className="form-label me-2 mb-0">Product:</label>
+          <input
+            className="form-control"
+            list="product-options"
+            id="product-search"
+            placeholder="Search by product..."
+            onChange={(e) => setSelectedProduct(e.target.value)}
+            value={selectedProduct}
+          />
+          <datalist id="product-options">
+            {mockProducts.map(p => <option key={p.id} value={`${p.name} (${p.id})`} />)}
+          </datalist>
+          {selectedProduct && (
+            <button
+              className="btn btn-sm btn-outline-danger ms-2"
+              onClick={() => setSelectedProduct('')}
+              title="Clear Filter"
+            >
+              <i className="bi bi-x-lg"></i>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* New Row for Forecasting and QR Funnel */}
       <div className="row">
         <div className="col-md-6 mb-4">
           <div className="card shadow-sm">
             <div className="card-body">
-              <h5 className="card-title">Monthly Registrations</h5>
-              <Bar data={registrationData} />
+              <h5 className="card-title">QR Code Funnel (Created vs. Sold)</h5>
+              <Bar data={filteredChartData.qrCodeComparisonData} />
             </div>
           </div>
         </div>
         <div className="col-md-6 mb-4">
           <div className="card shadow-sm">
             <div className="card-body">
-              <h5 className="card-title">Item Recovery Success</h5>
-              <Line data={recoveryData} />
+              <h5 className="card-title">Sales Forecasting</h5>
+              <Line data={filteredChartData.salesForecastData} />
             </div>
           </div>
         </div>
@@ -119,7 +188,7 @@ const AnalyticsDashboard = () => {
                   center={{ lat: 39.8283, lng: -98.5795 }} // Center of the US
                   zoom={4}
                 >
-                  {registrationLocations.map((loc, index) => (
+                  {filteredLocations.map((loc, index) => (
                     <Marker key={index} position={loc} />
                   ))}
                 </GoogleMap>
