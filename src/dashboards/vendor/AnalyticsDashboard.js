@@ -203,6 +203,7 @@ const AnalyticsDashboard = () => {
                   mapContainerStyle={mapContainerStyle}
                   center={{ lat: 39.8283, lng: -98.5795 }} // Center of the US
                   zoom={4}
+                  options={{ clickableIcons: false }}
                 >
                   {filteredLocations.map(loc => (
                     <Marker
