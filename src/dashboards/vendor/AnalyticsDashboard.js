@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  GoogleMap, Marker, useLoadScript
+  GoogleMap, Marker, InfoWindow, useLoadScript
 } from '@react-google-maps/api';
 import {
   Chart as ChartJS,
@@ -34,21 +34,21 @@ const mapContainerStyle = {
 
 // Mock data for registration locations
 const allRegistrationLocations = [
-  { lat: 34.0522, lng: -118.2437 }, // Los Angeles, CA
-  { lat: 40.7128, lng: -74.0060 },   // New York, NY
-  { lat: 29.7604, lng: -95.3698 },   // Houston, TX
-  { lat: 41.8781, lng: -87.6298 },   // Chicago, IL
-  { lat: 39.9526, lng: -75.1652 },   // Philadelphia, PA
-  { lat: 33.4484, lng: -112.0740 },  // Phoenix, AZ
-  { lat: 29.4241, lng: -98.4936 },   // San Antonio, TX
-  { lat: 32.7157, lng: -117.1611 },  // San Diego, CA
-  { lat: 32.7767, lng: -96.7970 },   // Dallas, TX
-  { lat: 37.3382, lng: -121.8863 },  // San Jose, CA
-  { lat: 47.6062, lng: -122.3321 },  // Seattle, WA
-  { lat: 39.7684, lng: -86.1581 },   // Indianapolis, IN
-  { lat: 39.7392, lng: -104.9903 },  // Denver, CO
-  { lat: 25.7617, lng: -80.1918 },   // Miami, FL
-  { lat: 33.7490, lng: -84.3880 },   // Atlanta, GA
+  { id: 'loc1', name: 'Los Angeles, CA', lat: 34.0522, lng: -118.2437, count: 52 },
+  { id: 'loc2', name: 'New York, NY', lat: 40.7128, lng: -74.0060, count: 88 },
+  { id: 'loc3', name: 'Houston, TX', lat: 29.7604, lng: -95.3698, count: 34 },
+  { id: 'loc4', name: 'Chicago, IL', lat: 41.8781, lng: -87.6298, count: 61 },
+  { id: 'loc5', name: 'Philadelphia, PA', lat: 39.9526, lng: -75.1652, count: 25 },
+  { id: 'loc6', name: 'Phoenix, AZ', lat: 33.4484, lng: -112.0740, count: 45 },
+  { id: 'loc7', name: 'San Antonio, TX', lat: 29.4241, lng: -98.4936, count: 19 },
+  { id: 'loc8', name: 'San Diego, CA', lat: 32.7157, lng: -117.1611, count: 38 },
+  { id: 'loc9', name: 'Dallas, TX', lat: 32.7767, lng: -96.7970, count: 41 },
+  { id: 'loc10', name: 'San Jose, CA', lat: 37.3382, lng: -121.8863, count: 30 },
+  { id: 'loc11', name: 'Seattle, WA', lat: 47.6062, lng: -122.3321, count: 55 },
+  { id: 'loc12', name: 'Indianapolis, IN', lat: 39.7684, lng: -86.1581, count: 22 },
+  { id: 'loc13', name: 'Denver, CO', lat: 39.7392, lng: -104.9903, count: 29 },
+  { id: 'loc14', name: 'Miami, FL', lat: 25.7617, lng: -80.1918, count: 48 },
+  { id: 'loc15', name: 'Atlanta, GA', lat: 33.7490, lng: -84.3880, count: 37 },
 ];
 
 const mockProducts = [
@@ -98,10 +98,15 @@ const salesForecastData = {
   ],
 };
 
+// Calculate the initial total sales count from the mock data.
+const initialTotalSales = allRegistrationLocations.reduce((sum, loc) => sum + loc.count, 0);
+
 const AnalyticsDashboard = () => {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [filteredChartData, setFilteredChartData] = useState({ qrCodeComparisonData, salesForecastData });
   const [filteredLocations, setFilteredLocations] = useState(allRegistrationLocations);
+  const [liveSalesCount, setLiveSalesCount] = useState(initialTotalSales); // Initial sales count for today
+  const [selectedMarker, setSelectedMarker] = useState(null);
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: 'AIzaSyAzCNCNbdAejKSgQrUgkshTJ_gapr6aioc', // Replace with your actual API key
@@ -116,14 +121,45 @@ const AnalyticsDashboard = () => {
       const newQrData = { ...qrCodeComparisonData, datasets: qrCodeComparisonData.datasets.map(ds => ({ ...ds, data: ds.data.map(d => d ? Math.floor(d * 0.4) + 10 : null) })) };
       const newSalesData = { ...salesForecastData, datasets: salesForecastData.datasets.map(ds => ({ ...ds, data: ds.data.map(d => d ? Math.floor(d * 0.4) + 10 : null) })) };
       setFilteredChartData({ qrCodeComparisonData: newQrData, salesForecastData: newSalesData });
-      // In a real app, you would filter locations by product ID. Here we just show a subset.
-      setFilteredLocations(allRegistrationLocations.slice(0, 5));
+
+      // Simulate filtering locations by product ID.
+      // For this mock, we'll show the first 7 locations for P01, and the next 8 for others.
+      const locationSlice = product.id === 'P01' ? allRegistrationLocations.slice(0, 7) : allRegistrationLocations.slice(7);
+      const productFilteredLocations = locationSlice.map(loc => ({
+        ...loc,
+        // Simulate different counts for a product filter
+        count: Math.floor(loc.count * 0.4) + 5,
+      }));
+
+      setFilteredLocations(productFilteredLocations);
+      // Update the global count to reflect the filtered locations
+      setLiveSalesCount(productFilteredLocations.reduce((sum, loc) => sum + loc.count, 0));
     } else {
       // Reset to all data when filter is cleared
       setFilteredChartData({ qrCodeComparisonData, salesForecastData });
       setFilteredLocations(allRegistrationLocations);
+      setLiveSalesCount(initialTotalSales);
     }
   }, [selectedProduct]);
+
+  useEffect(() => {
+    // Simulate live sales data coming in for each location
+    const interval = setInterval(() => {
+      setFilteredLocations(currentLocations => {
+        let totalSales = 0;
+        const newLocations = currentLocations.map(loc => {
+          const newCount = loc.count + Math.floor(Math.random() * 2) + 1; // Increment by 1 or 2
+          totalSales += newCount;
+          return { ...loc, count: newCount };
+        });
+        setLiveSalesCount(totalSales); // Update the total count
+        return newLocations; // Return the new locations array
+      });
+    }, 3000); // Update every 3 seconds
+
+    // Cleanup interval on component unmount or when product filter changes
+    return () => clearInterval(interval);
+  }, [selectedProduct]); // Rerun simulation if the product filter changes
 
   return (
     <div className="container-fluid">
@@ -154,6 +190,62 @@ const AnalyticsDashboard = () => {
         </div>
       </div>
 
+      {/* KPI and Map Row */}
+      <div className="row">
+        <div className="col-md-8 mb-4">
+          <div className="card shadow-sm">
+            <div className="card-body">
+              <h5 className="card-title">Registration Heatmap</h5>
+              {loadError && <p>Error loading map.</p>}
+              {!isLoaded && <p>Loading map...</p>}
+              {isLoaded && (
+                <GoogleMap
+                  mapContainerStyle={mapContainerStyle}
+                  center={{ lat: 39.8283, lng: -98.5795 }} // Center of the US
+                  zoom={4}
+                >
+                  {filteredLocations.map(loc => (
+                    <Marker
+                      key={loc.id}
+                      position={{ lat: loc.lat, lng: loc.lng }}
+                      onClick={() => setSelectedMarker(loc)}
+                    />
+                  ))}
+
+                  {selectedMarker && (
+                    <InfoWindow
+                      position={{ lat: selectedMarker.lat, lng: selectedMarker.lng }}
+                      onCloseClick={() => setSelectedMarker(null)}
+                    >
+                      <div><h5>{selectedMarker.name}</h5><p>Live Registrations: <strong>{selectedMarker.count.toLocaleString()}</strong></p></div>
+                    </InfoWindow>
+                  )}
+                </GoogleMap>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="col-md-4 mb-4">
+          <div className="card shadow-sm text-center">
+            <div className="card-body">
+              <h6 className="card-title text-muted">GLOBAL LIVE COUNT</h6>
+              <p className="card-text fs-2 fw-bold text-success mb-0">{liveSalesCount.toLocaleString()}</p>
+              <small className="text-muted">Total units registered</small>
+              <hr />
+              <h6 className="card-title text-muted mt-3">SELECTED LOCATION</h6>
+              {selectedMarker ? (
+                <>
+                  <p className="card-text fs-4 fw-bold text-primary mb-0">{selectedMarker.count.toLocaleString()}</p>
+                  <small className="text-muted">{selectedMarker.name}</small>
+                </>
+              ) : (
+                <p className="card-text text-muted fst-italic mt-3">Click a map marker to see its count</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* New Row for Forecasting and QR Funnel */}
       <div className="row">
         <div className="col-md-6 mb-4">
@@ -169,30 +261,6 @@ const AnalyticsDashboard = () => {
             <div className="card-body">
               <h5 className="card-title">Sales Forecasting</h5>
               <Line data={filteredChartData.salesForecastData} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* New Row for the Map */}
-      <div className="row">
-        <div className="col-12 mb-4">
-          <div className="card shadow-sm">
-            <div className="card-body">
-              <h5 className="card-title">Registration Heatmap</h5>
-              {loadError && <p>Error loading map.</p>}
-              {!isLoaded && <p>Loading map...</p>}
-              {isLoaded && (
-                <GoogleMap
-                  mapContainerStyle={mapContainerStyle}
-                  center={{ lat: 39.8283, lng: -98.5795 }} // Center of the US
-                  zoom={4}
-                >
-                  {filteredLocations.map((loc, index) => (
-                    <Marker key={index} position={loc} />
-                  ))}
-                </GoogleMap>
-              )}
             </div>
           </div>
         </div>
