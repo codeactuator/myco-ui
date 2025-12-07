@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const sidebarStyles = `
   #dashboard-nav .nav-link {
@@ -24,12 +24,6 @@ const sidebarStyles = `
     font-weight: 600;
     border-left: 3px solid #0d6efd;
   }
-
-  .sidebar-collapsed .nav-link .sidebar-text,
-  .sidebar-collapsed .panel-title-text,
-  .sidebar-collapsed .user-name-text {
-    display: none;
-  }
 `;
 
 const DashboardLayout = ({ panelTitle, navItems, children }) => {
@@ -45,46 +39,50 @@ const DashboardLayout = ({ panelTitle, navItems, children }) => {
   };
 
   return (
-    <div className="d-flex" style={{ minHeight: '100vh' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <style>{sidebarStyles}</style>
-      <div 
-        className={`d-flex flex-column flex-shrink-0 p-3 text-white bg-dark ${isCollapsed ? 'sidebar-collapsed' : ''}`} 
-        style={{ width: isCollapsed ? '80px' : '280px', transition: 'width 0.2s ease-in-out' }}
-      >
-        <div className="d-flex align-items-center mb-3 mb-md-0">
-          <a href="#" className="d-flex align-items-center text-white text-decoration-none">
+      
+      {/* Top Navbar */}
+      <nav className="navbar navbar-dark bg-dark px-3 shadow-sm sticky-top">
+        <div className="d-flex align-items-center">
+          <button className="btn btn-outline-secondary me-3" onClick={toggleSidebar} title="Toggle Sidebar">
+            <i className="bi bi-list"></i>
+          </button>
+          <Link to="/" className="navbar-brand d-flex align-items-center">
             <i className="bi bi-shield-shaded fs-4 me-2"></i>
-            <span className="fs-4 panel-title-text">{panelTitle}</span>
-          </a>
-          <button 
-            className="btn btn-outline-secondary ms-auto" 
-            onClick={toggleSidebar}
-            title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-          >
-            <i className={`bi ${isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'}`}></i>
+            <span className="fs-4">{panelTitle}</span>
+          </Link>
+        </div>
+        <div className="d-flex align-items-center text-white">
+          <i className="bi bi-person-circle fs-4 me-2"></i>
+          <strong>{user?.name || 'User'}</strong>
+          <button className="btn btn-link text-white text-decoration-none ms-2" onClick={handleLogout} title="Sign Out">
+            <i className="bi bi-box-arrow-left fs-5"></i>
           </button>
         </div>
-        <hr />
-        <ul className="nav nav-pills flex-column mb-auto" id="dashboard-nav">
-          {navItems}
-          <li className="nav-item mt-auto">
-            <a href="#" className="nav-link text-white" onClick={handleLogout}>
-              <i className="bi bi-box-arrow-left me-2"></i>
-              <span className="sidebar-text">Sign Out</span>
-            </a>
-          </li>
-        </ul>
-        <hr />
-        <div className="d-flex align-items-center">
-           <a href="#" className="d-flex align-items-center text-white text-decoration-none">
-             <i className="bi bi-person-circle fs-4 me-2"></i>
-             <strong className="user-name-text">{user?.name || 'User'}</strong>
-           </a>
-        </div>
-      </div>
+      </nav>
 
-      <div className="flex-grow-1 p-4 bg-light">
-        {children}
+      <div className="d-flex flex-grow-1">
+        {/* Collapsible Sidebar */}
+        {!isCollapsed && (
+          <div className="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style={{ width: '280px', transition: 'width 0.2s ease-in-out' }}>
+            <ul className="nav nav-pills flex-column mb-auto" id="dashboard-nav">
+              {navItems}
+            </ul>
+            <hr />
+            <div>
+              <a href="#" className="nav-link text-white" onClick={handleLogout}>
+                <i className="bi bi-box-arrow-left me-2"></i>
+                <span>Sign Out</span>
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Main Content Area */}
+        <div className="flex-grow-1 p-4 bg-light" style={{ overflowY: 'auto' }}>
+          {children}
+        </div>
       </div>
     </div>
   );

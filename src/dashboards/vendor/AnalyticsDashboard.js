@@ -163,7 +163,9 @@ const AnalyticsDashboard = () => {
 
   return (
     <div className="container-fluid">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      {/* The 'sticky-top' class makes this header stay at the top during scroll. 
+          'py-3' adds padding, and 'bg-light' ensures content doesn't show through. */}
+      <div className="d-flex justify-content-between align-items-center mb-4 sticky-top bg-light py-3" style={{ zIndex: 1020 }}>
         <h4 className="mb-0">Sales & Engagement Analytics</h4>
         <div className="d-flex align-items-center" style={{ minWidth: '300px' }}>
           <label htmlFor="product-search" className="form-label me-2 mb-0">Product:</label>
@@ -213,14 +215,6 @@ const AnalyticsDashboard = () => {
                     />
                   ))}
 
-                  {selectedMarker && (
-                    <InfoWindow
-                      position={{ lat: selectedMarker.lat, lng: selectedMarker.lng }}
-                      onCloseClick={() => setSelectedMarker(null)}
-                    >
-                      <div><h5>{selectedMarker.name}</h5><p>Live Registrations: <strong>{selectedMarker.count.toLocaleString()}</strong></p></div>
-                    </InfoWindow>
-                  )}
                 </GoogleMap>
               )}
             </div>

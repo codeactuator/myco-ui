@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import SupportDashboard from './dashboards/support/SupportDashboard';
-import DashboardLayout from './DashboardLayout';
-import SupportAnalytics from './dashboards/support/SupportAnalytics';
+import DashboardLayout from '../../DashboardLayout';
+import SupportDashboard from './SupportDashboard';
+import SupportAnalytics from './SupportAnalytics';
 
 const SupportView = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
