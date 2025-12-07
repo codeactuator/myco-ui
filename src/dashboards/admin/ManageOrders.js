@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import { QRCodeCanvas } from 'qrcode.react';
 
 // Mock data - in a real app, this would come from an API
 const mockVendors = {
   'V001': { name: 'Premium Bags Co.', products: [{ id: 'P01', name: 'Premium Leather Wallet' }, { id: 'P03', name: 'Traveler\'s Passport Holder' }] },
   'V002': { name: 'City Wallets Inc.', products: [{ id: 'P02', name: 'City Explorer Backpack' }] },
   'V003': { name: 'Urban Gear Co.', products: [{ id: 'P04', name: 'Canvas Messenger Bag' }] },
+};
+
+
+const qrImageSettings = {
+  src: 'https://picsum.photos/seed/myco/48/48', // Using a random placeholder logo
+  height: 24,
+  width: 24,
+  excavate: true, // Cut out the QR code pixels behind the logo
+  crossOrigin: 'anonymous', // Add this to prevent canvas tainting from cross-origin images
 };
 
 const ManageOrders = () => {
@@ -31,7 +42,7 @@ const ManageOrders = () => {
   const handleGenerateOrder = (e) => {
     e.preventDefault();
     if (!newOrder.vendorId || !newOrder.productId || newOrder.quantity <= 0) {
-      alert('Please fill out all fields correctly.');
+      toast.error('Please fill out all fields correctly.');
       return;
     }
 
@@ -50,7 +61,65 @@ const ManageOrders = () => {
     setOrders([order, ...orders]);
     setShowOrderForm(false);
     setNewOrder({ vendorId: '', productId: '', quantity: 100 });
-    alert(`Order ${order.id} created successfully!`);
+    toast.success(`Order ${order.id} created successfully!`);
+  };
+
+  const handlePrintAndDownload = (order) => {
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>QR Codes for Order ${order.id}</title>
+          <style>
+            body { font-family: sans-serif; margin: 1rem; }
+            @page { size: A4; margin: 20mm; }
+            h1 { font-size: 1.5rem; text-align: center; }
+            .header-info { margin-bottom: 1rem; border-bottom: 1px solid #ccc; padding-bottom: 1rem; }
+            .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 1rem; }
+            .qr-item { text-align: center; page-break-inside: avoid; }
+            .qr-item canvas { width: 100% !important; height: auto !important; }
+            .qr-item img { max-width: 100%; height: auto; }
+          </style>
+        </head>
+        <body>
+          <h1>QR Codes for Order ${order.id}</h1>
+          <div class="header-info">
+            <p><strong>Vendor:</strong> ${order.vendorName}</p>
+            <p><strong>Product:</strong> ${order.productName}</p>
+            <p><strong>Quantity:</strong> ${order.quantity}</p>
+          </div>
+          <div class="qr-grid" id="qr-container">
+            ${order.qrcodes.map((qr, index) => {
+              const canvas = document.getElementById(`qr-${order.id}-${index}`);
+              if (canvas) {
+                const dataUrl = canvas.toDataURL('image/png');
+                return `<div class="qr-item"><img src="${dataUrl}" alt="QR Code for ${qr}" /></div>`;
+              }
+              return '';
+            }).join('')}
+          </div>
+          <script>
+            window.onload = function() { window.print(); window.onafterprint = function() { window.close(); }; };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const handleDownloadAsImages = (order) => {
+    order.qrcodes.forEach((qr, index) => {
+      const canvas = document.getElementById(`qr-${order.id}-${index}`);
+      if (canvas) {
+        const pngUrl = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+        let downloadLink = document.createElement("a");
+        downloadLink.href = pngUrl;
+        downloadLink.download = `${order.id}-${index + 1}.png`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      }
+    });
   };
 
   return (
@@ -115,8 +184,23 @@ const ManageOrders = () => {
                   <tr>
                     <td colSpan="6" className="p-3 bg-light">
                       <h6 className="mb-2">Generated UUIDs for Order {order.id}</h6>
-                      <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '0.25rem', padding: '0.5rem' }}>
-                        <ul className="list-unstyled mb-0 font-monospace small">{order.qrcodes.map((qr, index) => <li key={index}>{qr}</li>)}</ul>
+                      <div 
+                        className="d-flex flex-wrap gap-3 p-2"
+                        style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '0.25rem', background: '#fff' }}
+                      >
+                        {order.qrcodes.map((qr, index) => (
+                          <div key={index} className="text-center">
+                            <QRCodeCanvas id={`qr-${order.id}-${index}`} value={qr} size={80} level="H" imageSettings={qrImageSettings} />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3">
+                        <button className="btn btn-sm btn-secondary me-2" onClick={() => handleDownloadAsImages(order)}>
+                          <i className="bi bi-download me-1"></i> Download All
+                        </button>
+                        <button className="btn btn-sm btn-secondary" onClick={() => handlePrintAndDownload(order)} title="Open a print-friendly page to print or save as PDF">
+                          <i className="bi bi-printer me-1"></i> Print / Save as PDF
+                        </button>
                       </div>
                     </td>
                   </tr>

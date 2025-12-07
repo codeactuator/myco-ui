@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const sidebarStyles = `
   #dashboard-nav .nav-link {
@@ -37,6 +39,19 @@ const DashboardLayout = ({ panelTitle, navItems, children }) => {
     logout();
     navigate('/business-login');
   };
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsCollapsed(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Call on initial load
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -84,6 +99,7 @@ const DashboardLayout = ({ panelTitle, navItems, children }) => {
           {children}
         </div>
       </div>
+      <ToastContainer position="bottom-right" autoClose={5000} hideProgressBar={false} />
     </div>
   );
 };

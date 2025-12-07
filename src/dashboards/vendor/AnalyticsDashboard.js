@@ -260,6 +260,7 @@ const AnalyticsDashboard = () => {
           </div>
         </div>
       </div>
+
     </div>
   );
 };

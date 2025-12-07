@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 
 const initialVendors = [
   { id: 'V001', name: 'Premium Bags Co.', contact: 'Alice Johnson', email: 'alice@premiumbags.com', phone: '123-456-7890', products: [{ id: 'P01', name: 'Premium Leather Wallet' }, { id: 'P03', name: 'Traveler\'s Passport Holder' }] },
@@ -39,12 +40,12 @@ const ManageVendors = () => {
     if (editingVendor.id) {
       // Update existing vendor
       setVendors(vendors.map(v => v.id === editingVendor.id ? editingVendor : v));
-      alert('Vendor updated successfully!');
+      toast.success('Vendor updated successfully!');
     } else {
       // Add new vendor
       const newVendorWithId = { ...editingVendor, id: `V00${vendors.length + 1}` };
       setVendors([...vendors, newVendorWithId]);
-      alert('Vendor added successfully!');
+      toast.success('Vendor added successfully!');
     }
     handleCancel();
   };
@@ -63,10 +64,10 @@ const ManageVendors = () => {
       updatedProducts = vendorToUpdate.products.map(p =>
         p.id === editingProduct.originalId ? { id: editingProduct.id, name: editingProduct.name } : p
       );
-      alert('Product updated successfully!');
+      toast.success('Product updated successfully!');
     } else { // Adding new product
       updatedProducts = [...vendorToUpdate.products, { id: editingProduct.id, name: editingProduct.name }];
-      alert('Product added successfully!');
+      toast.success('Product added successfully!');
     }
 
     setVendors(vendors.map(v => v.id === vendorToUpdate.id ? { ...v, products: updatedProducts } : v));

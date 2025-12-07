@@ -1,5 +1,7 @@
 import logo from './logo.svg';
 import "bootstrap-icons/font/bootstrap-icons.css";
+import "bootstrap/dist/css/bootstrap.min.css";
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { AuthProvider } from './AuthContext';
 import './App.css';
 import React from 'react';
