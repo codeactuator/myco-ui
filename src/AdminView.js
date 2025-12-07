@@ -1,26 +1,37 @@
 import React, { useState } from 'react';
-import QRCodeGenerator from './dashboards/vendor/QRCodeGenerator';
 import DashboardLayout from './DashboardLayout';
+import ManageVendors from './dashboards/admin/ManageVendors';
+import ManageOrders from './dashboards/admin/ManageOrders';
 
 const AdminView = () => {
-  const [activeTab, setActiveTab] = useState('qr-generator');
+  const [activeTab, setActiveTab] = useState('manage-orders');
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'qr-generator':
-        return <QRCodeGenerator />;
-      // Add other admin tabs here in the future
+      case 'manage-vendors':
+        return <ManageVendors />;
+      case 'manage-orders':
+        return <ManageOrders />;
       default:
-        return <QRCodeGenerator />;
+        return <ManageOrders />;
     }
   };
 
   const navItems = (
-    <li className="nav-item">
-      <a href="#" className={`nav-link text-white ${activeTab === 'qr-generator' ? 'active' : ''}`} onClick={() => setActiveTab('qr-generator')}>
-        <i className="bi bi-qr-code me-2"></i><span className="sidebar-text">QR Generation</span>
-      </a>
-    </li>
+    <>
+      <li className="nav-item">
+        <a href="#" className={`nav-link text-white ${activeTab === 'manage-vendors' ? 'active' : ''}`} onClick={() => setActiveTab('manage-vendors')}>
+          <i className="bi bi-people-fill me-2"></i>
+          <span className="sidebar-text">Manage Vendors</span>
+        </a>
+      </li>
+      <li className="nav-item">
+        <a href="#" className={`nav-link text-white ${activeTab === 'manage-orders' ? 'active' : ''}`} onClick={() => setActiveTab('manage-orders')}>
+          <i className="bi bi-box-seam-fill me-2"></i>
+          <span className="sidebar-text">Manage Orders</span>
+        </a>
+      </li>
+    </>
   );
 
   return (
