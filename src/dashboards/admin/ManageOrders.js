@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { QRCodeCanvas } from 'qrcode.react';
+import { initialVendors } from './mockData';
 
-// Mock data - in a real app, this would come from an API
-const mockVendors = {
-  'V001': { name: 'Premium Bags Co.', products: [{ id: 'P01', name: 'Premium Leather Wallet' }, { id: 'P03', name: 'Traveler\'s Passport Holder' }] },
-  'V002': { name: 'City Wallets Inc.', products: [{ id: 'P02', name: 'City Explorer Backpack' }] },
-  'V003': { name: 'Urban Gear Co.', products: [{ id: 'P04', name: 'Canvas Messenger Bag' }] },
+// This would be fetched from a DB or managed by a state management library
+const qrConfigs = {
+  default: { size: 80, fgColor: '#000000', bgColor: '#FFFFFF' },
+  products: {
+    'P01': { size: 80, fgColor: '#8B4513', bgColor: '#F5F5DC' },
+  },
 };
 
+// Convert array to object for easier lookup
+const mockVendorsObject = initialVendors.reduce((obj, vendor) => {
+  obj[vendor.id] = vendor;
+  return obj;
+}, {});
 
-const qrImageSettings = {
-  src: 'https://picsum.photos/seed/myco/48/48', // Using a random placeholder logo
-  height: 24,
-  width: 24,
-  excavate: true, // Cut out the QR code pixels behind the logo
-  crossOrigin: 'anonymous', // Add this to prevent canvas tainting from cross-origin images
-};
 
 const ManageOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -26,8 +26,8 @@ const ManageOrders = () => {
   const [expandedOrderId, setExpandedOrderId] = useState(null);
 
   useEffect(() => {
-    if (newOrder.vendorId && mockVendors[newOrder.vendorId]) {
-      setAvailableProducts(mockVendors[newOrder.vendorId].products);
+    if (newOrder.vendorId && mockVendorsObject[newOrder.vendorId]) {
+      setAvailableProducts(mockVendorsObject[newOrder.vendorId].products);
       setNewOrder(prev => ({ ...prev, productId: '' })); // Reset product selection
     } else {
       setAvailableProducts([]);
@@ -51,8 +51,8 @@ const ManageOrders = () => {
 
     const order = {
       id: `ORD-${Date.now()}`,
-      vendorName: mockVendors[newOrder.vendorId].name,
-      productName: availableProducts.find(p => p.id === newOrder.productId).name,
+      vendorName: mockVendorsObject[newOrder.vendorId].name,
+      productName: availableProducts.find(p => p.id === newOrder.productId)?.name,
       quantity: newOrder.quantity,
       createdAt: new Date(),
       qrcodes: generatedQRs,
@@ -138,7 +138,7 @@ const ManageOrders = () => {
                 <label className="form-label">Vendor</label>
                 <select name="vendorId" value={newOrder.vendorId} onChange={handleInputChange} className="form-select" required>
                   <option value="">Select a vendor</option>
-                  {Object.entries(mockVendors).map(([id, vendor]) => <option key={id} value={id}>{vendor.name}</option>)}
+                  {initialVendors.map(vendor => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}
                 </select>
               </div>
               <div className="col-md-4 mb-3">
@@ -188,11 +188,13 @@ const ManageOrders = () => {
                         className="d-flex flex-wrap gap-3 p-2"
                         style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '0.25rem', background: '#fff' }}
                       >
-                        {order.qrcodes.map((qr, index) => (
-                          <div key={index} className="text-center">
-                            <QRCodeCanvas id={`qr-${order.id}-${index}`} value={qr} size={80} level="H" imageSettings={qrImageSettings} />
-                          </div>
-                        ))}
+                        {order.qrcodes.map((qr, index) => {
+                          const productId = orders.find(o => o.id === order.id)?.productName.match(/\(([^)]+)\)/)?.[1];
+                          const config = qrConfigs.products[productId] || qrConfigs.default;
+                          return (
+                            <div key={index} className="text-center"><QRCodeCanvas id={`qr-${order.id}-${index}`} value={qr} size={config.size} fgColor={config.fgColor} bgColor={config.bgColor} level="M" /></div>
+                          );
+                        })}
                       </div>
                       <div className="mt-3">
                         <button className="btn btn-sm btn-secondary me-2" onClick={() => handleDownloadAsImages(order)}>
