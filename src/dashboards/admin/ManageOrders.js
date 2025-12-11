@@ -75,8 +75,8 @@ const ManageOrders = () => {
             @page { size: A4; margin: 20mm; }
             h1 { font-size: 1.5rem; text-align: center; }
             .header-info { margin-bottom: 1rem; border-bottom: 1px solid #ccc; padding-bottom: 1rem; }
-            .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 1rem; }
-            .qr-item { text-align: center; page-break-inside: avoid; }
+            .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 1.5rem; }
+            .qr-item { text-align: center; page-break-inside: avoid; padding: 5px; border: 1px solid #ccc; border-radius: 8px; }
             .qr-item canvas { width: 100% !important; height: auto !important; }
             .qr-item img { max-width: 100%; height: auto; }
           </style>
@@ -192,7 +192,19 @@ const ManageOrders = () => {
                           const productId = orders.find(o => o.id === order.id)?.productName.match(/\(([^)]+)\)/)?.[1];
                           const config = qrConfigs.products[productId] || qrConfigs.default;
                           return (
-                            <div key={index} className="text-center"><QRCodeCanvas id={`qr-${order.id}-${index}`} value={qr} size={config.size} fgColor={config.fgColor} bgColor={config.bgColor} level="M" /></div>
+                            <div 
+                              key={index} 
+                              className="text-center p-1"
+                              style={{ border: '1px solid #ddd', borderRadius: '8px' }}
+                            >
+                              <QRCodeCanvas 
+                                id={`qr-${order.id}-${index}`} 
+                                value={qr} 
+                                size={config.size} 
+                                fgColor={config.fgColor} 
+                                bgColor={config.bgColor} 
+                                level="M" style={{ borderRadius: '6px' }} />
+                            </div>
                           );
                         })}
                       </div>
