@@ -5,9 +5,9 @@ import { initialVendors } from './mockData';
 
 // This would be fetched from a DB or managed by a state management library
 const qrConfigs = {
-  default: { size: 80, fgColor: '#000000', bgColor: '#FFFFFF' },
+  default: { size: 80, fgColor: '#000000', bgColor: '#FFFFFF', rounded: false },
   products: {
-    'P01': { size: 80, fgColor: '#8B4513', bgColor: '#F5F5DC' },
+    'P01': { size: 80, fgColor: '#8B4513', bgColor: '#F5F5DC', rounded: true },
   },
 };
 
@@ -75,8 +75,8 @@ const ManageOrders = () => {
             @page { size: A4; margin: 20mm; }
             h1 { font-size: 1.5rem; text-align: center; }
             .header-info { margin-bottom: 1rem; border-bottom: 1px solid #ccc; padding-bottom: 1rem; }
-            .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 1.5rem; }
-            .qr-item { text-align: center; page-break-inside: avoid; padding: 5px; border: 1px solid #ccc; border-radius: 8px; }
+            .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 1rem; }
+            .qr-item { text-align: center; page-break-inside: avoid; padding: 5px; border: 1px solid #ccc; }
             .qr-item canvas { width: 100% !important; height: auto !important; }
             .qr-item img { max-width: 100%; height: auto; }
           </style>
@@ -93,7 +93,9 @@ const ManageOrders = () => {
               const canvas = document.getElementById(`qr-${order.id}-${index}`);
               if (canvas) {
                 const dataUrl = canvas.toDataURL('image/png');
-                return `<div class="qr-item"><img src="${dataUrl}" alt="QR Code for ${qr}" /></div>`;
+                const productId = order.productName.match(/\(([^)]+)\)/)?.[1];
+                const config = qrConfigs.products[productId] || qrConfigs.default;
+                return `<div class="qr-item" style="border-radius: ${config.rounded ? '8px' : '0'};"><img src="${dataUrl}" alt="QR Code for ${qr}" style="border-radius: ${config.rounded ? '6px' : '0'};" /></div>`;
               }
               return '';
             }).join('')}
@@ -195,7 +197,7 @@ const ManageOrders = () => {
                             <div 
                               key={index} 
                               className="text-center p-1"
-                              style={{ border: '1px solid #ddd', borderRadius: '8px' }}
+                              style={{ border: '1px solid #ddd', borderRadius: config.rounded ? '8px' : '0' }}
                             >
                               <QRCodeCanvas 
                                 id={`qr-${order.id}-${index}`} 
@@ -203,7 +205,9 @@ const ManageOrders = () => {
                                 size={config.size} 
                                 fgColor={config.fgColor} 
                                 bgColor={config.bgColor} 
-                                level="M" style={{ borderRadius: '6px' }} />
+                                level="M" 
+                                style={{ borderRadius: config.rounded ? '6px' : '0' }} 
+                              />
                             </div>
                           );
                         })}

@@ -159,7 +159,7 @@ const AnalyticsDashboard = () => {
 
     // Cleanup interval on component unmount or when product filter changes
     return () => clearInterval(interval);
-  }, [selectedProduct]); // Rerun simulation if the product filter changes
+  }, []); // Rerun simulation if the product filter changes
 
   return (
     <div className="container-fluid">
@@ -169,26 +169,17 @@ const AnalyticsDashboard = () => {
         <h4 className="mb-0">Sales & Engagement Analytics</h4>
         <div className="d-flex align-items-center" style={{ minWidth: '300px' }}>
           <label htmlFor="product-search" className="form-label me-2 mb-0">Product:</label>
-          <input
+          <select
             className="form-control"
-            list="product-options"
             id="product-search"
-            placeholder="Search by product..."
             onChange={(e) => setSelectedProduct(e.target.value)}
             value={selectedProduct}
-          />
-          <datalist id="product-options">
-            {mockProducts.map(p => <option key={p.id} value={`${p.name} (${p.id})`} />)}
-          </datalist>
-          {selectedProduct && (
-            <button
-              className="btn btn-sm btn-outline-danger ms-2"
-              onClick={() => setSelectedProduct('')}
-              title="Clear Filter"
-            >
-              <i className="bi bi-x-lg"></i>
-            </button>
-          )}
+          >
+            <option value="">All Products</option>
+            {mockProducts.map(p => (
+              <option key={p.id} value={`${p.name} (${p.id})`}>{p.name}</option>
+            ))}
+          </select>
         </div>
       </div>
 
