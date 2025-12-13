@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 
 // Mock data - in a real app, this would come from an API
 const mockVendors = {
@@ -107,8 +108,12 @@ const QRCodeGenerator = () => {
 
         {confirmedProduct && (
           <div className="mt-4 text-center">
-            <h6>Product Selected:</h6>
-            <p className="lead">{confirmedProduct.name} ({confirmedProduct.id})</p>
+            <h6 className="mb-3">Generated QR Code for: <span className="fw-bold">{confirmedProduct.name} ({confirmedProduct.id})</span></h6>
+            <QRCodeSVG
+              id="product-qr-code"
+              value={`${window.location.origin}/scan?uid=${confirmedProduct.id}`}
+              size={200}
+            />
           </div>
         )}
       </div>

@@ -3,6 +3,6 @@
 // The browser resolves this against the current host, and the Ingress routes it.
 
 //const API_BASE_URL = "/api";
-const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL = "http://localhost:8081/api";
 
 export default API_BASE_URL;

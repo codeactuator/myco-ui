@@ -201,7 +201,7 @@ const ManageOrders = () => {
                             >
                               <QRCodeCanvas 
                                 id={`qr-${order.id}-${index}`} 
-                                value={qr} 
+                                value={`${window.location.origin}/scan?uid=${qr}`} 
                                 size={config.size} 
                                 fgColor={config.fgColor} 
                                 bgColor={config.bgColor} 

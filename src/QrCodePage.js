@@ -1,34 +1,51 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { QRCodeSVG } from "qrcode.react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import API_BASE_URL from "./config";
 
 const QrCodePage = () => {
-  const [qrImage, setQrImage] = useState(null);
+  const [qrOwnerId, setQrOwnerId] = useState(null);
   const navigate = useNavigate();
   const userId = "3172b0e7-a538-4085-8cf8-fe7fae1b07ce"; // replace with real user ID (from login context, token, etc.)
-
 
   useEffect(() => {
     const fetchQrCode = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/v1/qr/${userId}`);
-        if (!response.ok) throw new Error("Failed to fetch QR code");
-        const blob = await response.blob();
-        const imageUrl = URL.createObjectURL(blob);
-        setQrImage(imageUrl);
+        if (!response.ok) throw new Error("Failed to fetch QR owner ID");
+        const id = await response.text(); // Get the ID from the response body
+        setQrOwnerId(id); // Set the fetched ID
       } catch (err) {
         console.error(err);
         alert("Error fetching QR code");
       }
     };
-
+ 
     fetchQrCode();
   }, [userId]);
-  
-  
-  
+ 
+  const getQrCodeDataUrl = () => {
+    const svg = document.getElementById("qr-code-svg");
+    if (!svg) return null;
+ 
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+ 
+    return new Promise((resolve) => {
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      };
+      img.src = "data:image/svg+xml;base64," + btoa(svgData);
+    });
+  };
+ 
 	const handlePrint = () => {
 	  const printWindow = window.open('', '_blank');
 	  printWindow.document.write(`
@@ -41,7 +58,7 @@ const QrCodePage = () => {
 			</style>
 		  </head>
 		  <body>
-			<img src="${qrImage}" alt="QR Code" />
+			${document.getElementById("qr-code-svg")?.outerHTML || ""}
 			<script>
 			  window.onload = () => {
 				window.print();
@@ -53,25 +70,28 @@ const QrCodePage = () => {
 	  `);
 	};
 
-	const handleShare = async () => {
-	  if (navigator.share) {
-		try {
-		  await navigator.share({
-			title: 'My QR Code',
-			text: 'Scan this QR Code to get my profile.',
-			url: qrImage,
-		  });
-		} catch (err) {
-		  alert('Sharing cancelled or failed.');
-		}
-	  } else {
-		alert('Sharing is not supported in this browser.');
-	  }
+	const handleShare = async () => {	
+	  const dataUrl = await getQrCodeDataUrl();
+    if (!dataUrl || !navigator.share) {
+      alert("Sharing is not supported or QR code is not available.");
+      return;
+    }
+
+    try {
+      await navigator.share({
+        title: "My QR Code",
+        text: "Scan this QR Code to get my profile.",
+        url: dataUrl,
+      });
+    } catch (err) {
+      alert("Sharing cancelled or failed.");
+    }
 	};
 	
-	const handleDownload = () => {
-	  if (!qrImage) return;
-
+	const handleDownload = async () => {
+	  const qrImage = await getQrCodeDataUrl();
+    if (!qrImage) return;
+ 
 	  const link = document.createElement('a');
 	  link.href = qrImage;
 	  link.download = 'my-qr-code.png'; // file name
@@ -79,9 +99,6 @@ const QrCodePage = () => {
 	  link.click();
 	  document.body.removeChild(link);
 	};
-
-
-
 
   return (
     <div className="bg-light min-vh-100 d-flex flex-column">
@@ -138,13 +155,14 @@ const QrCodePage = () => {
 
 		{/* QR Code Display */}
 		<div className="flex-grow-1 d-flex justify-content-center align-items-center p-4">
-		  {qrImage ? (
-			<img
-			  src={qrImage}
-			  alt="User QR Code"
-			  className="img-fluid shadow"
-			  style={{ maxWidth: "300px" }}
-			/>
+		  {qrOwnerId ? (
+        <div className="shadow p-3 bg-white rounded">
+          <QRCodeSVG
+            id="qr-code-svg"
+            value={qrOwnerId}
+            size={280}
+          />
+        </div>
 		  ) : (
 			<p>Loading QR code...</p>
 		  )}

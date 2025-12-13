@@ -8,7 +8,7 @@ import API_BASE_URL from './config';
 const ScanPage = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
-	const ownerId = new URLSearchParams(location.search).get('ownerId');
+	const uid = new URLSearchParams(location.search).get('uid');
 
 	const fileInputRef = useRef(null);
 	const [capturedImages, setCapturedImages] = useState([]);
@@ -190,7 +190,7 @@ const ScanPage = () => {
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 				fromUserId: userId,
-				toUserId: ownerId,
+				toUserId: uid,
 				mobileNumber,
 				capturedImages }),
 			});
@@ -217,7 +217,7 @@ const ScanPage = () => {
 			formData.append('file', imageBlob, `captured-${i + 1}.jpg`);
 			formData.append('title', 'Add Title');
 			formData.append('postedBy', userId);
-			formData.append('postedFor', ownerId);
+			formData.append('postedFor', uid);
 
 			if (coordinates.latitude && coordinates.longitude) {
 				formData.append('latitude', coordinates.latitude);
