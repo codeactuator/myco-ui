@@ -21,6 +21,7 @@ import ProtectedRoute from './ProtectedRoute';
 import AdminDashboard from './AdminDashboard';
 import RegisterProductPage from './RegisterProductPage';
 import MyProductsPage from './MyProductsPage';
+import UserLayout from './UserLayout';
 
 
 const App = () => {

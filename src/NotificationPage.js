@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
 import API_BASE_URL from './config';
+import UserLayout from './UserLayout';
 
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -143,25 +144,12 @@ const NotificationPage = () => {
   };
 
   return (
-    <div className="bg-light min-vh-100 d-flex flex-column">
-      <header className="bg-primary text-white py-3 shadow-sm w-100">
-        <div className="container d-flex justify-content-between align-items-center">
-          <h1 className="mb-0">myco</h1>
-          <button
-            className="btn btn-outline-light"
-            title="Go Home"
-            onClick={() => navigate('/home')}
-          >
-            <i className="bi bi-house-fill"></i>
-          </button>
-        </div>
-      </header>
-
+    <UserLayout pageTitle="Notifications">
       {loading && <p className="text-center mt-4">Loading posts...</p>}
       {error && <p className="text-danger text-center mt-4">{error}</p>}
 
       <div className="container py-4">
-        <div className="row">
+        <div className="row g-4">
           {posts.map((post) => (
             <div key={post.id} className="col-12 col-md-6 mb-4">
               <div className="card w-100 shadow-sm">
@@ -270,7 +258,7 @@ const NotificationPage = () => {
           ))}
         </div>
       </div>
-    </div>
+    </UserLayout>
   );
 };
 

@@ -4,6 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { QRCodeSVG } from "qrcode.react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import API_BASE_URL from "./config";
+import UserLayout from "./UserLayout";
 
 const QrCodePage = () => {
   const [qrOwnerId, setQrOwnerId] = useState(null);
@@ -101,65 +102,25 @@ const QrCodePage = () => {
 	};
 
   return (
-    <div className="bg-light min-vh-100 d-flex flex-column">
-      {/* Header with Home Button */}
-	  <header className="bg-primary text-white py-3 shadow-sm sticky-top">
-		  <div className="container d-flex justify-content-between align-items-center">
-			
-			{/* Home Button on the Left */}
-			<button
-			  className="btn btn-outline-light rounded-circle p-2 d-flex align-items-center justify-content-center"
-			  onClick={() => navigate("/home")}
-			  style={{ width: "40px", height: "40px" }}
-			  aria-label="Home"
-			>
-			  <i className="bi bi-house-door-fill fs-5"></i>
-			</button>
-
-			<h4 className="mb-0">My QR Code</h4>
-
-			{/* Icons on the Right: Print, Share, Download */}
-			<div className="d-flex align-items-center gap-2">
-			  <button
-				className="btn btn-outline-light rounded-circle p-2 d-flex align-items-center justify-content-center"
-				onClick={handlePrint}
-				style={{ width: "40px", height: "40px" }}
-				aria-label="Print QR"
-			  >
-				<i className="bi bi-printer fs-5"></i>
-			  </button>
-
-			  <button
-				className="btn btn-outline-light rounded-circle p-2 d-flex align-items-center justify-content-center"
-				onClick={handleShare}
-				style={{ width: "40px", height: "40px" }}
-				aria-label="Share QR"
-			  >
-				<i className="bi bi-share-fill fs-5"></i>
-			  </button>
-
-			  <button
-				className="btn btn-outline-light rounded-circle p-2 d-flex align-items-center justify-content-center"
-				onClick={handleDownload}
-				style={{ width: "40px", height: "40px" }}
-				aria-label="Download QR"
-			  >
-				<i className="bi bi-download fs-5"></i>
-			  </button>
-			</div>
-		  </div>
-	</header>
-
-
-
-
+    <UserLayout pageTitle="My QR Code">
+      <div className="d-flex justify-content-end gap-2 mb-3">
+        <button className="btn btn-secondary" onClick={handlePrint} title="Print QR">
+          <i className="bi bi-printer fs-5"></i>
+        </button>
+        <button className="btn btn-secondary" onClick={handleShare} title="Share QR">
+          <i className="bi bi-share-fill fs-5"></i>
+        </button>
+        <button className="btn btn-secondary" onClick={handleDownload} title="Download QR">
+          <i className="bi bi-download fs-5"></i>
+        </button>
+      </div>
 		{/* QR Code Display */}
-		<div className="flex-grow-1 d-flex justify-content-center align-items-center p-4">
+		<div className="d-flex justify-content-center align-items-center p-4">
 		  {qrOwnerId ? (
         <div className="shadow p-3 bg-white rounded">
           <QRCodeSVG
             id="qr-code-svg"
-            value={qrOwnerId}
+            value={`${window.location.origin}/scan?uid=${qrOwnerId}`}
             size={280}
           />
         </div>
@@ -167,8 +128,7 @@ const QrCodePage = () => {
 			<p>Loading QR code...</p>
 		  )}
 		</div>
-
-    </div>
+    </UserLayout>
   );
 };
 

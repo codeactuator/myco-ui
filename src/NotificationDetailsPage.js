@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API_BASE_URL from './config';
 import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
+import UserLayout from './UserLayout';
 
 const mapContainerStyle = {
   width: '100%',
@@ -44,52 +45,54 @@ const NotificationDetailsPage = () => {
   if (!post) return <p className="text-center mt-4">Loading post...</p>;
 
   return (
-    <div className="container py-4">
-      <div className="card shadow">
-        <div className="card-body">
-          <h4>{post.postedByName}</h4>
-          <h6 className="text-muted">
-            {new Date(post.createdAt).toLocaleString('en-GB')}
-          </h6>
-          <p>{post.description}</p>
+    <UserLayout pageTitle="Notification Details">
+      <div className="container">
+        <div className="card shadow">
+          <div className="card-body">
+            <h4>{post.postedByName}</h4>
+            <h6 className="text-muted">
+              {new Date(post.createdAt).toLocaleString('en-GB')}
+            </h6>
+            <p>{post.description}</p>
+          </div>
+
+          {images.length > 0 ? (
+            <img
+              src={images[0].filePath}
+              alt="Post visual"
+              className="card-img-bottom"
+              style={{ objectFit: 'cover', height: '300px' }}
+            />
+          ) : (
+            <div
+              className="bg-secondary d-flex align-items-center justify-content-center text-white"
+              style={{ height: '300px' }}
+            >
+              No Image
+            </div>
+          )}
+
+          {post.latitude && post.longitude && (
+            <div className="p-3">
+              {loadError && <p>Error loading map</p>}
+              {!isLoaded && <p>Loading map...</p>}
+              {isLoaded && (
+                <GoogleMap
+                  mapContainerStyle={mapContainerStyle}
+                  center={{ lat: post.latitude, lng: post.longitude }}
+                  zoom={13}
+                >
+                  <Marker
+                    position={{ lat: post.latitude, lng: post.longitude }}
+                    title={post.location || 'Post Location'}
+                  />
+                </GoogleMap>
+              )}
+            </div>
+          )}
         </div>
-
-        {images.length > 0 ? (
-          <img
-            src={images[0].filePath}
-            alt="Post visual"
-            className="card-img-bottom"
-            style={{ objectFit: 'cover', height: '300px' }}
-          />
-        ) : (
-          <div
-            className="bg-secondary d-flex align-items-center justify-content-center text-white"
-            style={{ height: '300px' }}
-          >
-            No Image
-          </div>
-        )}
-
-        {post.latitude && post.longitude && (
-          <div className="p-3">
-            {loadError && <p>Error loading map</p>}
-            {!isLoaded && <p>Loading map...</p>}
-            {isLoaded && (
-              <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                center={{ lat: post.latitude, lng: post.longitude }}
-                zoom={13}
-              >
-                <Marker
-                  position={{ lat: post.latitude, lng: post.longitude }}
-                  title={post.location || 'Post Location'}
-                />
-              </GoogleMap>
-            )}
-          </div>
-        )}
       </div>
-    </div>
+    </UserLayout>
   );
 };
 

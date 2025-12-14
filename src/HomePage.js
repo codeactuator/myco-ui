@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API_BASE_URL from "./config";
 import { Html5QrcodeScanner } from 'html5-qrcode';
+import UserLayout from "./UserLayout";
 
 const QrScanner = ({ onScanSuccess, onScanFailure, closeScanner }) => {
   useEffect(() => {
@@ -139,48 +140,7 @@ const HomePage = () => {
   );
 
   return (
-    <div className="bg-light min-vh-100 d-flex flex-column">
-      <header className="bg-primary text-white py-3 shadow-sm sticky-top">
-        <div className="container d-flex justify-content-between align-items-center">
-          <h1 className="mb-0">myco</h1>
-          <div className="d-flex">
-              <button
-                  className="btn btn-outline-light rounded-circle p-2 d-flex align-items-center justify-content-center me-2"
-                  onClick={() => setShowScanner(true)}
-                  style={{ width: "40px", height: "40px" }}
-                  aria-label="Register Product"
-                  title="Register New Product"
-                >
-              <i className="bi bi-upc-scan"></i>
-            </button>
-              <button
-                  className="btn btn-outline-light rounded-circle p-2 d-flex align-items-center justify-content-center me-2"
-                  onClick={() => navigate("/np")}
-                  style={{ width: "40px", height: "40px" }}
-                  aria-label="Notifications"
-                >
-              <i className="bi bi-bell-fill"></i>
-            </button>
-            <button
-              className="btn btn-outline-light rounded-circle p-2 d-flex align-items-center justify-content-center me-2"
-              onClick={() => navigate("/qr")}
-              style={{ width: "40px", height: "40px" }}
-              aria-label="QR Code"
-            >
-              <i className="bi bi-qr-code-scan"></i>
-            </button>
-            <button
-              className="btn btn-outline-light rounded-circle p-2 d-flex align-items-center justify-content-center"
-              onClick={() => navigate("/posts")}
-              style={{ width: "40px", height: "40px" }}
-              aria-label="List"
-            >
-              <i className="bi bi-list"></i>
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <UserLayout pageTitle="Home">
       {/* QR Code Scanner Modal */}
       {showScanner && (
         <QrScanner
@@ -190,17 +150,24 @@ const HomePage = () => {
         />
       )}
       <button
+        className="btn btn-info rounded-circle position-fixed shadow"
+        onClick={() => setShowScanner(true)}
+        style={{ bottom: "90px", right: "20px", width: "56px", height: "56px", zIndex: 1050, color: 'white' }}
+        title="Register New Product"
+      >
+        <i className="bi bi-upc-scan fs-4"></i>
+      </button>
+
+      <button
         className="btn btn-primary rounded-circle position-fixed shadow"
         style={{ bottom: "20px", right: "20px", width: "56px", height: "56px", zIndex: 1050 }}
-        data-bs-toggle="modal"
-        data-bs-target="#addContactModal"
         onClick={() => navigate("/add-contact", { state: { userId, mobileNumber } })}
         title="Add Contact"
       >
         <i className="bi bi-plus-lg fs-4"></i>
       </button>
 
-      <main className="container py-4 flex-grow-1">
+      <div className="container py-4">
         {loading && <p>Loading contacts...</p>}
         {error && <p className="text-danger">{error}</p>}
 
@@ -213,7 +180,7 @@ const HomePage = () => {
             )}
           </section>
         )}
-      </main>
+      </div>
 
       {/* Toast Notification */}
       <div className="toast-container position-fixed bottom-0 end-0 p-3" style={{ zIndex: 9999 }}>
@@ -235,7 +202,7 @@ const HomePage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </UserLayout>
   );
 };
 

@@ -4,6 +4,7 @@ import CaptureSection from './CaptureSection';
 import EmergencyModal from './EmergencyModal';
 import { base64ToBlob, resizeBase64Image } from './utils/imageUtils';
 import API_BASE_URL from './config';
+import UserLayout from './UserLayout';
 
 const ScanPage = () => {
 	const location = useLocation();
@@ -236,83 +237,63 @@ const ScanPage = () => {
 	};
 
 	return (
-		<div className="bg-light min-vh-100 d-flex flex-column">
-			<div className="py-3 d-flex justify-content-between align-items-center border-bottom px-4 bg-primary text-white">
-				<h1 className="mb-0">myco</h1>
-				{step === 'capture' && (
-					<div className="d-flex align-items-center gap-3">
-						<CaptureSection {...{ handleCapture, fileInputRef, handleImageChange }} />
-						<button
-							className="btn btn-outline-light"
-							title="Go Home"
-							onClick={() => navigate('/home')}
-						>
-							<i className="bi bi-house-fill"></i>
-						</button>
-					</div>
-				)}
-			</div>
-
-			<div className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
-				{step === 'mobile' && (
-					<div className="card shadow p-4" style={{ maxWidth: '400px', width: '100%' }}>
-						<h6 className="text-center mb-4">Login with your mobile number</h6>
-						<input
-							type="text"
-							className="form-control mb-3"
-							placeholder="Mobile Number"
-							value={mobileNumber}
-							onChange={(e) => setMobileNumber(e.target.value)}
-						/>
-						<button className="btn btn-primary w-100" onClick={checkUserVerification}>
-							<i className="bi bi-arrow-right me-2"></i> Continue
-						</button>
-					</div>
-				)}
-
-				{step === 'capture' && (
-					<div className="card shadow p-4" style={{ maxWidth: '400px', width: '100%' }}>
-						<h6 className="text-success text-center mb-4">Capture Photo</h6>
-
-						{capturedImages.length > 0 && (
-							<div className="mb-3 text-center d-flex flex-wrap justify-content-center gap-2">
-								{capturedImages.map((img, index) => (
-									<div key={index} className="position-relative" style={{ display: 'inline-block' }}>
-										<img
-											src={img}
-											alt={`Captured ${index + 1}`}
-											className="img-thumbnail"
-											style={{ width: '100px', height: '100px', objectFit: 'cover' }}
-										/>
-										<button
-											onClick={() => handleRemoveImage(index)}
-											className="btn btn-sm btn-danger position-absolute top-0 end-0"
-											style={{ transform: 'translate(10%, -10%)', backgroundColor: 'rgba(220,53,69,0.9)' }}
-										>
-											&times;
-										</button>
-									</div>
-								))}
+		<UserLayout pageTitle="Scan">
+			<div className="container">
+				<div className="row justify-content-center">
+					<div className="col-lg-6">
+						{step === 'mobile' && (
+							<div className="card shadow p-4">
+								<h6 className="text-center mb-4">Login with your mobile number</h6>
+								<input
+									type="text"
+									className="form-control mb-3"
+									placeholder="Mobile Number"
+									value={mobileNumber}
+									onChange={(e) => setMobileNumber(e.target.value)}
+								/>
+								<button className="btn btn-primary w-100" onClick={checkUserVerification}>
+									<i className="bi bi-arrow-right me-2"></i> Continue
+								</button>
 							</div>
 						)}
 
-						<div className="d-grid gap-3">
-							{capturedImages.length > 0 && !isUploaded && (
-								<button className="btn btn-primary" onClick={handleUploadClick}>
-									<i className="bi bi-upload me-2"></i> Upload Photo
-								</button>
-							)}
+						{step === 'capture' && (
+							<div className="card shadow p-4">
+								<h6 className="text-success text-center mb-4">Capture Photo</h6>
+								<div className="text-center mb-3">
+									<CaptureSection {...{ handleCapture, fileInputRef, handleImageChange }} />
+								</div>
 
-							{isUploaded && (
-								<button className="btn btn-danger" onClick={makeCallToOwner}>
-									📞 Emergency Call
-								</button>
-							)}
-						</div>
+								{capturedImages.length > 0 && (
+									<div className="mb-3 text-center d-flex flex-wrap justify-content-center gap-2">
+										{capturedImages.map((img, index) => (
+											<div key={index} className="position-relative" style={{ display: 'inline-block' }}>
+												<img src={img} alt={`Captured ${index + 1}`} className="img-thumbnail" style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
+												<button onClick={() => handleRemoveImage(index)} className="btn btn-sm btn-danger position-absolute top-0 end-0" style={{ transform: 'translate(10%, -10%)', backgroundColor: 'rgba(220,53,69,0.9)' }}>
+													&times;
+												</button>
+											</div>
+										))}
+									</div>
+								)}
+
+								<div className="d-grid gap-3">
+									{capturedImages.length > 0 && !isUploaded && (
+										<button className="btn btn-primary" onClick={handleUploadClick}>
+											<i className="bi bi-upload me-2"></i> Upload Photo
+										</button>
+									)}
+									{isUploaded && (
+										<button className="btn btn-danger" onClick={makeCallToOwner}>
+											📞 Emergency Call
+										</button>
+									)}
+								</div>
+							</div>
+						)}
 					</div>
-				)}
+				</div>
 			</div>
-
 			{step === 'otp' && (
 				<EmergencyModal
 					{...{
@@ -330,7 +311,7 @@ const ScanPage = () => {
 					}}
 				/>
 			)}
-		</div>
+		</UserLayout>
 	);
 };
 

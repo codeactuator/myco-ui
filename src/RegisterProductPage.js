@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import API_BASE_URL from './config';
+import UserLayout from './UserLayout';
 
 const RegisterProductPage = () => {
   const location = useLocation();
@@ -35,7 +36,7 @@ const RegisterProductPage = () => {
       setUserId(storedUserId);
     } else {
       toast.warn("You must be logged in to register a product.");
-      navigate("/login"); // Or wherever your login page is
+      navigate("/signup"); // The SignUpPage handles login
     }
   }, [location.search, navigate]);
 
@@ -74,34 +75,22 @@ const RegisterProductPage = () => {
   };
 
   return (
-    <div className="bg-light min-vh-100 d-flex flex-column">
-      <header className="bg-primary text-white py-3 shadow-sm sticky-top">
-        <div className="container d-flex justify-content-between align-items-center">
-          <h4 className="mb-0">Register Product</h4>
-          <button
-            className="btn btn-outline-light rounded-circle p-2 d-flex align-items-center justify-content-center"
-            onClick={() => navigate("/home")}
-            style={{ width: "40px", height: "40px" }}
-            aria-label="Home"
-          >
-            <i className="bi bi-house-door-fill fs-5"></i>
-          </button>
-        </div>
-      </header>
-
-      <main className="flex-grow-1 d-flex align-items-center justify-content-center p-4">
-        <div className="card shadow-sm" style={{ maxWidth: '500px', width: '100%' }}>
-          <div className="card-body text-center p-4">
-            {uid ? (
-              <p className="fs-5">You are about to register product with ID: <br/><strong className="text-primary">{uid}</strong></p>
-            ) : <p>Loading product information...</p>}
-            <button className="btn btn-primary w-100 mt-3" onClick={handleRegisterProduct} disabled={!uid || isRegistering}>
-              {isRegistering ? 'Registering...' : 'Confirm Registration'}
-            </button>
+    <UserLayout pageTitle="Register Product">
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="col-lg-6">
+            <div className="card shadow-sm">
+              <div className="card-body text-center p-4">
+                {uid ? (<p className="fs-5">You are about to register product with ID: <br /><strong className="text-primary">{uid}</strong></p>) : <p>Loading product information...</p>}
+                <button className="btn btn-primary w-100 mt-3" onClick={handleRegisterProduct} disabled={!uid || isRegistering}>
+                  {isRegistering ? 'Registering...' : 'Confirm Registration'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </UserLayout>
   );
 };
 
