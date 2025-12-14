@@ -13,7 +13,15 @@ const RegisterProductPage = () => {
   useEffect(() => {
     // Extract UID from URL
     const queryParams = new URLSearchParams(location.search);
-    const productId = queryParams.get('uid');
+    let productId = queryParams.get('uid');
+
+    // In case the full URL was passed as the uid, extract the uid from it.
+    try {
+      const url = new URL(productId);
+      // If parsing succeeds, get the 'uid' param from the nested URL.
+      productId = url.searchParams.get('uid') || productId;
+    } catch (e) { /* Not a URL, proceed as normal */ }
+
     if (productId) {
       setUid(productId);
     } else {

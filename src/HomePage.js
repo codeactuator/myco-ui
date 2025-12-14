@@ -10,9 +10,17 @@ const QrScanner = ({ onScanSuccess, onScanFailure, closeScanner }) => {
       return;
     }
 
+    // Configuration for the scanner
+    const config = {
+      fps: 10,
+      qrbox: { width: 250, height: 250 },
+      // Explicitly request the rear camera
+      videoConstraints: { facingMode: "environment" }
+    };
+
     const html5QrcodeScanner = new Html5QrcodeScanner(
       "qr-reader",
-      { fps: 10, qrbox: { width: 250, height: 250 } },
+      config,
       false // verbose
     );
 
