@@ -17,7 +17,7 @@ const activeLinkStyles = {
 };
 
 const UserLayout = ({ children, pageTitle }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const navigate = useNavigate();
 
   const toggleLeftNav = () => setIsCollapsed(!isCollapsed);
@@ -37,7 +37,7 @@ const UserLayout = ({ children, pageTitle }) => {
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       {/* Left Navigation */}
-      <nav className="d-flex flex-column flex-shrink-0 bg-dark text-white" style={{ width: isCollapsed ? '70px' : '220px', transition: 'width 0.2s ease-in-out' }}>
+      <nav className="d-flex flex-column flex-shrink-0 bg-dark text-white" style={{ width: isCollapsed ? '0' : '220px', transition: 'width 0.2s ease-in-out', overflow: 'hidden' }}>
         <ul className="nav nav-pills nav-flush flex-column mb-auto text-center">
           <li className="nav-item">
             <NavLink to="/home" style={({ isActive }) => ({ ...(isCollapsed ? collapsedNavLinkStyles : navLinkStyles), ...(isActive ? activeLinkStyles : {}) })} title="Home">
