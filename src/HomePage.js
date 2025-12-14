@@ -101,18 +101,19 @@ const HomePage = () => {
 
   const handleScanSuccess = (decodedText) => {
     setShowScanner(false);
+    let productId = decodedText; // Default to using the full scanned text
+
     try {
-      // If the decoded text is a full URL to our app, navigate to it
+      // Check if the decoded text is a URL. If so, try to get the 'uid' parameter from it.
       const url = new URL(decodedText);
-      if (url.origin === window.location.origin && url.pathname === '/register' && url.searchParams.has('uid')) {
-        navigate(url.pathname + url.search);
-        return;
+      if (url.searchParams.has('uid')) {
+        productId = url.searchParams.get('uid');
       }
     } catch (_) {
-      // Not a valid URL, assume it's a UID
+      // Not a valid URL, so we'll use the decodedText as the productId.
     }
-    // Assume the decoded text is the UID and navigate
-    navigate(`/register?uid=${decodedText}`);
+    // Navigate to the registration page with the extracted or original ID.
+    navigate(`/register?uid=${productId}`);
   };
 
   const handleScanFailure = (errorMessage) => {
