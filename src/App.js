@@ -19,6 +19,7 @@ import NotificationDetailsPage from './NotificationDetailsPage';
 import BusinessLoginPage from './BusinessLoginPage';
 import ProtectedRoute from './ProtectedRoute';
 import AdminDashboard from './AdminDashboard';
+import RegisterProductPage from './RegisterProductPage';
 
 
 const App = () => {
@@ -39,6 +40,8 @@ const App = () => {
             <Route path="/np" element={<NotificationPage />} />
             <Route path="/thank-you" element={<ThankYouPage />} />
             <Route path="/notification-details/:postId" element={<NotificationDetailsPage />} />
+            <Route path="/register" element={<RegisterProductPage />} />
+            <Route path="/my-products" element={<div className="container text-center mt-5"><h1>My Registered Products</h1><p>This page is under construction.</p></div>} />
             
             {/* Business App Routes */}
             <Route path="/business-login" element={<BusinessLoginPage />} />
