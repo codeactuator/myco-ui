@@ -9,7 +9,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import SignUpPage from './SignUpPage';
 import OtpPage from './OtpPage';
 import HomePage from './HomePage';
-import AddContactPage from "./AddContactPage";
+import AddContact from "./AddContact";
 import QrCodePage from "./QrCodePage";
 import ScanPage from "./ScanPage";
 import ThankYouPage from "./ThankYouPage";
@@ -35,7 +35,7 @@ const App = () => {
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/otp" element={<OtpPage />} />
             <Route path="/home" element={<HomePage />} />
-            <Route path="/add-contact" element={<AddContactPage />} />
+            <Route path="/add-contact" element={<AddContact />} />
             <Route path="/qr" element={<QrCodePage />} />
             <Route path="/scan" element={<ScanPage />} />
             <Route path="/posts" element={<PostListPage />} />
