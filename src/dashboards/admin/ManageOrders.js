@@ -1,67 +1,117 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { QRCodeCanvas } from 'qrcode.react';
-import { initialVendors } from './mockData';
-
-// This would be fetched from a DB or managed by a state management library
-const qrConfigs = {
-  default: { size: 80, fgColor: '#000000', bgColor: '#FFFFFF', rounded: false },
-  products: {
-    'P01': { size: 80, fgColor: '#8B4513', bgColor: '#F5F5DC', rounded: true },
-  },
-};
-
-// Convert array to object for easier lookup
-const mockVendorsObject = initialVendors.reduce((obj, vendor) => {
-  obj[vendor.id] = vendor;
-  return obj;
-}, {});
-
+import API_BASE_URL from '../../config';
 
 const ManageOrders = () => {
   const [orders, setOrders] = useState([]);
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [newOrder, setNewOrder] = useState({ vendorId: '', productId: '', quantity: 100 });
+  const [vendors, setVendors] = useState([]);
   const [availableProducts, setAvailableProducts] = useState([]);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [qrConfigs, setQrConfigs] = useState({
+    default: { size: 128, fgColor: '#000000', bgColor: '#FFFFFF', rounded: false },
+    products: {}
+  });
 
   useEffect(() => {
-    if (newOrder.vendorId && mockVendorsObject[newOrder.vendorId]) {
-      setAvailableProducts(mockVendorsObject[newOrder.vendorId].products);
-      setNewOrder(prev => ({ ...prev, productId: '' })); // Reset product selection
-    } else {
-      setAvailableProducts([]);
+    fetchVendors();
+    fetchQrConfigs();
+    fetchOrders();
+  }, []);
+
+  useEffect(() => {
+    if (newOrder.vendorId) {
+      fetchProducts(newOrder.vendorId);
     }
+    setAvailableProducts([]);
+    setNewOrder(prev => ({ ...prev, productId: '' }));
   }, [newOrder.vendorId]);
+
+  const fetchVendors = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/v1/vendors`);
+      if (res.ok) setVendors(await res.json());
+    } catch (error) {
+      console.error("Error fetching vendors:", error);
+    }
+  };
+
+  const fetchProducts = async (vendorId) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/v1/products/vendor/${vendorId}`);
+      if (res.ok) setAvailableProducts(await res.json());
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
+
+  const fetchQrConfigs = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/v1/qr-configs`);
+      if (res.ok) setQrConfigs(await res.json());
+    } catch (error) {
+      console.error("Error fetching QR configs:", error);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/v1/orders`);
+      if (res.ok) {
+        const data = await res.json();
+        const mappedOrders = data.map(order => ({
+          ...order,
+          vendorName: order.vendor?.name || 'Unknown',
+          productName: order.product?.name || 'Unknown',
+          productId: order.product?.id,
+          createdAt: new Date(order.createdAt)
+        }));
+        // Sort by date descending
+        mappedOrders.sort((a, b) => b.createdAt - a.createdAt);
+        setOrders(mappedOrders);
+      }
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewOrder(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleGenerateOrder = (e) => {
+  const handleGenerateOrder = async (e) => {
     e.preventDefault();
     if (!newOrder.vendorId || !newOrder.productId || newOrder.quantity <= 0) {
       toast.error('Please fill out all fields correctly.');
       return;
     }
 
-    // Generate UUIDs for the QR codes
-    const generatedQRs = Array.from({ length: newOrder.quantity }, () => crypto.randomUUID());
+    try {
+      const res = await fetch(`${API_BASE_URL}/v1/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vendor: { id: newOrder.vendorId },
+          product: { id: newOrder.productId },
+          quantity: parseInt(newOrder.quantity)
+        })
+      });
 
-    const order = {
-      id: `ORD-${Date.now()}`,
-      vendorName: mockVendorsObject[newOrder.vendorId].name,
-      productName: availableProducts.find(p => p.id === newOrder.productId)?.name,
-      quantity: newOrder.quantity,
-      createdAt: new Date(),
-      qrcodes: generatedQRs,
-    };
-
-    setOrders([order, ...orders]);
-    setShowOrderForm(false);
-    setNewOrder({ vendorId: '', productId: '', quantity: 100 });
-    toast.success(`Order ${order.id} created successfully!`);
+      if (res.ok) {
+        toast.success('Order created successfully!');
+        setShowOrderForm(false);
+        setNewOrder({ vendorId: '', productId: '', quantity: 100 });
+        fetchOrders();
+      } else {
+        toast.error('Failed to create order.');
+      }
+    } catch (error) {
+      console.error("Error creating order:", error);
+      toast.error('Error creating order.');
+    }
   };
 
   const handlePrintAndDownload = (order) => {
@@ -93,8 +143,7 @@ const ManageOrders = () => {
               const canvas = document.getElementById(`qr-${order.id}-${index}`);
               if (canvas) {
                 const dataUrl = canvas.toDataURL('image/png');
-                const productId = order.productName.match(/\(([^)]+)\)/)?.[1];
-                const config = qrConfigs.products[productId] || qrConfigs.default;
+                const config = qrConfigs.products[order.productId] || qrConfigs.default;
                 return `<div class="qr-item" style="border-radius: ${config.rounded ? '8px' : '0'};"><img src="${dataUrl}" alt="QR Code for ${qr}" style="border-radius: ${config.rounded ? '6px' : '0'};" /></div>`;
               }
               return '';
@@ -140,14 +189,14 @@ const ManageOrders = () => {
                 <label className="form-label">Vendor</label>
                 <select name="vendorId" value={newOrder.vendorId} onChange={handleInputChange} className="form-select" required>
                   <option value="">Select a vendor</option>
-                  {initialVendors.map(vendor => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}
+                  {vendors.map(vendor => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}
                 </select>
               </div>
               <div className="col-md-4 mb-3">
                 <label className="form-label">Product</label>
                 <select name="productId" value={newOrder.productId} onChange={handleInputChange} className="form-select" required disabled={!newOrder.vendorId}>
                   <option value="">{newOrder.vendorId ? 'Select a product' : 'Select vendor first'}</option>
-                  {availableProducts.map(p => <option key={p.id} value={p.id}>{p.name} ({p.id})</option>)}
+                  {availableProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
               <div className="col-md-2 mb-3">
@@ -191,8 +240,7 @@ const ManageOrders = () => {
                         style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '0.25rem', background: '#fff' }}
                       >
                         {order.qrcodes.map((qr, index) => {
-                          const productId = orders.find(o => o.id === order.id)?.productName.match(/\(([^)]+)\)/)?.[1];
-                          const config = qrConfigs.products[productId] || qrConfigs.default;
+                          const config = qrConfigs.products[order.productId] || qrConfigs.default;
                           return (
                             <div 
                               key={index} 

@@ -32,15 +32,15 @@ const AdminView = () => {
         </a>
       </li>
       <li className="nav-item">
-        <a href="#" className={`nav-link text-white ${activeTab === 'manage-orders' ? 'active' : ''}`} onClick={() => setActiveTab('manage-orders')}>
-          <i className="bi bi-box-seam-fill me-2"></i>
-          <span className="sidebar-text">Manage Orders</span>
-        </a>
-      </li>
-      <li className="nav-item">
         <a href="#" className={`nav-link text-white ${activeTab === 'manage-products' ? 'active' : ''}`} onClick={() => setActiveTab('manage-products')}>
           <i className="bi bi-tags-fill me-2"></i>
           <span className="sidebar-text">Manage Products</span>
+        </a>
+      </li>
+      <li className="nav-item">
+        <a href="#" className={`nav-link text-white ${activeTab === 'manage-orders' ? 'active' : ''}`} onClick={() => setActiveTab('manage-orders')}>
+          <i className="bi bi-box-seam-fill me-2"></i>
+          <span className="sidebar-text">Manage Orders</span>
         </a>
       </li>
       <li className="nav-item">
