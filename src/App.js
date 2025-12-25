@@ -25,6 +25,7 @@ import RegisterProductPage from './RegisterProductPage';
 import MyProductsPage from './MyProductsPage';
 import UserLayout from './UserLayout';
 import VendorView from './VendorView';
+import PromotionPreviewPage from './PromotionPreviewPage';
 
 const DashboardSwitcher = () => {
   const { user } = useAuth();
@@ -58,6 +59,7 @@ const App = () => {
             <Route path="/notification-details/:postId" element={<NotificationDetailsPage />} />
             <Route path="/register" element={<RegisterProductPage />} />
             <Route path="/my-products" element={<MyProductsPage />} />
+            <Route path="/promotions/:id" element={<PromotionPreviewPage />} />
             
             {/* Business App Routes */}
             <Route path="/admin/login" element={<AdminLoginPage />} />

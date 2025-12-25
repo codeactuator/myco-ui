@@ -8,6 +8,10 @@ class PromotionService {
         return axios.get(`${PROMOTION_API_URL}/vendor/${vendorId}`);
     }
 
+    getPromotionById(id) {
+        return axios.get(`${PROMOTION_API_URL}/${id}`);
+    }
+
     createPromotion(promotion) {
         return axios.post(PROMOTION_API_URL, promotion);
     }
@@ -18,6 +22,18 @@ class PromotionService {
 
     deletePromotion(id) {
         return axios.delete(`${PROMOTION_API_URL}/${id}`);
+    }
+
+    sendPromotion(id) {
+        return axios.post(`${PROMOTION_API_URL}/${id}/send`);
+    }
+
+    trackView(id) {
+        return axios.post(`${PROMOTION_API_URL}/${id}/view`);
+    }
+
+    trackLike(id) {
+        return axios.post(`${PROMOTION_API_URL}/${id}/like`);
     }
 }
 

@@ -10,6 +10,8 @@ const ManagePromotions = () => {
     const [showModal, setShowModal] = useState(false);
     const [editingPromo, setEditingPromo] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
+    const [showPreview, setShowPreview] = useState(false);
+    const [previewPromo, setPreviewPromo] = useState(null);
     
     const [formData, setFormData] = useState({
         code: '',
@@ -80,6 +82,23 @@ const ManagePromotions = () => {
         }
     };
 
+    const handlePreview = (promo) => {
+        setPreviewPromo(promo);
+        setShowPreview(true);
+    };
+
+    const confirmSend = async () => {
+        if (!previewPromo) return;
+        try {
+            await PromotionService.sendPromotion(previewPromo.id);
+            toast.success("Promotion sent to consumers!");
+            setShowPreview(false);
+            setPreviewPromo(null);
+        } catch (error) {
+            toast.error("Failed to send promotion");
+        }
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -123,52 +142,117 @@ const ManagePromotions = () => {
             </div>
 
             {loading ? <p>Loading...</p> : (
-                <div className="table-responsive bg-white shadow-sm rounded">
-                    <table className="table table-hover mb-0">
-                        <thead className="table-light">
-                            <tr>
-                                <th>Image</th>
-                                <th>Code</th>
-                                <th>Description</th>
-                                <th>Type</th>
-                                <th>Value</th>
-                                <th>Duration</th>
-                                <th>Status</th>
-                                <th className="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {promotions.map(promo => (
-                                <tr key={promo.id}>
-                                    <td>
-                                        {promo.imageUrl ? (
-                                            <i className="bi bi-image text-primary" title={promo.imageUrl}></i>
-                                        ) : (
-                                            <i className="bi bi-image text-muted"></i>
-                                        )}
-                                    </td>
-                                    <td><strong>{promo.code}</strong></td>
-                                    <td>{promo.description}</td>
-                                    <td>{promo.discountType}</td>
-                                    <td>{promo.discountValue}</td>
-                                    <td>{promo.startDate} to {promo.endDate}</td>
-                                    <td>
+                <div className="row">
+                    {promotions.map(promo => (
+                        <div className="col-md-4 mb-4" key={promo.id}>
+                            <div className="card h-100 shadow-sm">
+                                {promo.imageUrl ? (
+                                    <img 
+                                        src={`http://localhost:8080/uploads/${promo.imageUrl}`} 
+                                        className="card-img-top" 
+                                        alt={promo.code}
+                                        style={{ height: '200px', objectFit: 'cover' }}
+                                    />
+                                ) : (
+                                    <div className="card-img-top bg-light d-flex align-items-center justify-content-center" style={{ height: '200px' }}>
+                                        <i className="bi bi-image text-muted fs-1"></i>
+                                    </div>
+                                )}
+                                <div className="card-body d-flex flex-column">
+                                    <div className="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 className="card-title text-primary mb-0">{promo.code}</h5>
                                         <span className={`badge ${promo.status === 'ACTIVE' ? 'bg-success' : 'bg-secondary'}`}>
                                             {promo.status}
                                         </span>
-                                    </td>
-                                    <td className="text-end">
-                                        <button className="btn btn-sm btn-outline-primary me-2" onClick={() => handleEdit(promo)}>
-                                            <i className="bi bi-pencil"></i>
-                                        </button>
-                                        <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(promo.id)}>
-                                            <i className="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                    </div>
+                                    <p className="card-text text-muted small mb-3" style={{ minHeight: '40px' }}>
+                                        {promo.description?.length > 100 ? promo.description.substring(0, 100) + '...' : promo.description}
+                                    </p>
+                                    
+                                    <div className="mb-3 small">
+                                        <div className="d-flex justify-content-between mb-1">
+                                            <span className="fw-bold">Type:</span>
+                                            <span>{promo.discountType === 'PERCENTAGE' ? 'Percentage' : 'Fixed Amount'}</span>
+                                        </div>
+                                        <div className="d-flex justify-content-between mb-1">
+                                            <span className="fw-bold">Value:</span>
+                                            <span>{promo.discountValue}</span>
+                                        </div>
+                                        <div className="d-flex justify-content-between">
+                                            <span className="fw-bold">Valid:</span>
+                                            <span>{promo.startDate} - {promo.endDate}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="d-flex justify-content-between align-items-center border-top pt-3 mt-auto">
+                                        <div className="d-flex gap-3 text-muted small">
+                                            <span title="Views"><i className="bi bi-eye me-1"></i> {promo.viewCount || 0}</span>
+                                            <span title="Likes"><i className="bi bi-heart me-1"></i> {promo.likeCount || 0}</span>
+                                        </div>
+                                        <div className="btn-group">
+                                            <button className="btn btn-sm btn-outline-success" onClick={() => handlePreview(promo)} title="Send">
+                                                <i className="bi bi-whatsapp"></i>
+                                            </button>
+                                            <button className="btn btn-sm btn-outline-primary" onClick={() => handleEdit(promo)} title="Edit">
+                                                <i className="bi bi-pencil"></i>
+                                            </button>
+                                            <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(promo.id)} title="Delete">
+                                                <i className="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                    {promotions.length === 0 && (
+                        <div className="col-12 text-center py-5">
+                            <p className="text-muted">No promotions found. Create one to get started!</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {showPreview && previewPromo && (
+                <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">WhatsApp Notification Preview</h5>
+                                <button type="button" className="btn-close" onClick={() => setShowPreview(false)}></button>
+                            </div>
+                            <div className="modal-body">
+                                <div className="card">
+                                    {previewPromo.imageUrl && (
+                                        <img 
+                                            src={`http://localhost:8080/uploads/${previewPromo.imageUrl}`} 
+                                            className="card-img-top" 
+                                            alt="Promotion"
+                                            style={{ maxHeight: '200px', objectFit: 'cover' }} 
+                                        />
+                                    )}
+                                    <div className="card-body bg-light">
+                                        <p className="card-text" style={{ whiteSpace: 'pre-wrap' }}>
+                                            Check out this new promotion: {previewPromo.description}
+                                            <br />
+                                            <br />
+                                            View & Like here: http://localhost:3000/promotions/{previewPromo.id}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="mt-3 text-muted small">
+                                    <i className="bi bi-info-circle me-1"></i>
+                                    This message will be sent to all subscribed consumers.
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowPreview(false)}>Cancel</button>
+                                <button type="button" className="btn btn-success" onClick={confirmSend}>
+                                    <i className="bi bi-whatsapp me-2"></i> Send Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
 
