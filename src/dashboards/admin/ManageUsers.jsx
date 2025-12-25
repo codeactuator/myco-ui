@@ -106,7 +106,7 @@ const ManageUsers = () => {
         e.preventDefault();
         const payload = {
             ...formData,
-            vendorId: formData.role === 'VENDOR' ? parseInt(formData.vendorId) : null
+            vendorId: formData.role === 'VENDOR' ? formData.vendorId : null
         };
 
         try {

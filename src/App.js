@@ -2,7 +2,7 @@ import logo from './logo.svg';
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import { AuthProvider } from './AuthContext';
+import { AuthProvider, useAuth } from './AuthContext';
 import './App.css';
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
@@ -24,7 +24,19 @@ import AdminDashboard from './AdminDashboard';
 import RegisterProductPage from './RegisterProductPage';
 import MyProductsPage from './MyProductsPage';
 import UserLayout from './UserLayout';
+import VendorView from './VendorView';
 
+const DashboardSwitcher = () => {
+  const { user } = useAuth();
+  if (!user) return null;
+
+  switch (user.role) {
+    case 'VENDOR':
+      return <VendorView />;
+    default:
+      return <AdminDashboard />;
+  }
+};
 
 const App = () => {
   return (
@@ -53,7 +65,7 @@ const App = () => {
             <Route path="/support/login" element={<SupportLoginPage />} />
             <Route path="/dashboard/*" element={
               <ProtectedRoute allowedRoles={['ADMIN', 'VENDOR', 'SUPPORT']}>
-                <AdminDashboard />
+                <DashboardSwitcher />
               </ProtectedRoute>
             } />
             <Route path="/unauthorized" element={<div className="container text-center mt-5"><h1>403 - Unauthorized</h1><p>You do not have permission to view this page.</p></div>} />

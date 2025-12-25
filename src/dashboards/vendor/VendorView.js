@@ -1,40 +1,31 @@
 import React, { useState } from 'react';
-import AnalyticsDashboard from './AnalyticsDashboard'; // Assuming this is the correct path
-import PromotionsPage from './PromotionsPage'; // Assuming this is the correct path
-import FeedbackPage from './FeedbackPage'; // Assuming this is the correct path
 import DashboardLayout from '../../DashboardLayout';
+import ManagePromotions from './ManagePromotions';
 
 const VendorView = () => {
-  const [activeTab, setActiveTab] = useState('analytics');
+  const [activeTab, setActiveTab] = useState('manage-promotions');
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'analytics':
-        return <AnalyticsDashboard />;
-      case 'promotions':
-        return <PromotionsPage />;
-      case 'feedback':
-        return <FeedbackPage />;
+      case 'manage-promotions':
+        return <ManagePromotions />;
       default:
-        return <AnalyticsDashboard />;
+        return <div className="p-4"><h3>Welcome to Vendor Dashboard</h3><p>Select an option from the menu.</p></div>;
     }
   };
 
   const navItems = (
     <>
       <li className="nav-item">
-        <a href="#" className={`nav-link text-white ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>
-          <i className="bi bi-bar-chart-line-fill me-2"></i><span className="sidebar-text">Analytics</span>
+        <a href="#" className={`nav-link text-white ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
+          <i className="bi bi-speedometer2 me-2"></i>
+          <span className="sidebar-text">Overview</span>
         </a>
       </li>
       <li className="nav-item">
-        <a href="#" className={`nav-link text-white ${activeTab === 'promotions' ? 'active' : ''}`} onClick={() => setActiveTab('promotions')}>
-          <i className="bi bi-megaphone-fill me-2"></i><span className="sidebar-text">Promotions</span>
-        </a>
-      </li>
-      <li className="nav-item">
-        <a href="#" className={`nav-link text-white ${activeTab === 'feedback' ? 'active' : ''}`} onClick={() => setActiveTab('feedback')}>
-          <i className="bi bi-star-fill me-2"></i><span className="sidebar-text">Feedback & Ratings</span>
+        <a href="#" className={`nav-link text-white ${activeTab === 'manage-promotions' ? 'active' : ''}`} onClick={() => setActiveTab('manage-promotions')}>
+          <i className="bi bi-tags-fill me-2"></i>
+          <span className="sidebar-text">Manage Promotions</span>
         </a>
       </li>
     </>

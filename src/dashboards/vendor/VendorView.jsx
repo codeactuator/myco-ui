@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import DashboardLayout from './DashboardLayout';
-import ManagePromotions from './dashboards/vendor/ManagePromotions';
-import AnalyticsDashboard from './dashboards/vendor/AnalyticsDashboard';
-import FeedbackPage from './dashboards/vendor/FeedbackPage';
+import DashboardLayout from '../../DashboardLayout';
+import ManagePromotions from './ManagePromotions';
+import AnalyticsDashboard from './AnalyticsDashboard';
+import FeedbackPage from './FeedbackPage';
 
 const VendorView = () => {
   const [activeTab, setActiveTab] = useState('dashboard');

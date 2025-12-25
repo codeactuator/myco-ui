@@ -49,7 +49,7 @@ const CreateUser = () => {
 
         const payload = {
             ...user,
-            vendorId: user.role === 'VENDOR' ? parseInt(user.vendorId) : null
+            vendorId: user.role === 'VENDOR' ? user.vendorId : null
         };
 
         try {
