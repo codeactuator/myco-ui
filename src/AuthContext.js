@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
@@ -7,15 +7,21 @@ export const AuthProvider = ({ children }) => {
   // For demonstration, we'll start with a mock user.
   const [user, setUser] = useState(null);
 
-  // Mock login function
-  const login = (role) => {
-    // In a real app, you'd get a token from your backend.
-    // The token would contain the user's role.
-    setUser({ name: `${role.charAt(0).toUpperCase() + role.slice(1)} User`, role: role.toUpperCase() });
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const login = (userData) => {
+    setUser(userData);
+    sessionStorage.setItem('user', JSON.stringify(userData));
   };
 
   const logout = () => {
     setUser(null);
+    sessionStorage.removeItem('user');
   };
 
   const value = { user, login, logout };

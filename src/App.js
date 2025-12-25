@@ -16,7 +16,9 @@ import ThankYouPage from "./ThankYouPage";
 import PostListPage from "./PostListPage";
 import NotificationPage from "./NotificationPage";
 import NotificationDetailsPage from './NotificationDetailsPage';
-import BusinessLoginPage from './BusinessLoginPage';
+import AdminLoginPage from './AdminLoginPage';
+import VendorLoginPage from './VendorLoginPage';
+import SupportLoginPage from './SupportLoginPage';
 import ProtectedRoute from './ProtectedRoute';
 import AdminDashboard from './AdminDashboard';
 import RegisterProductPage from './RegisterProductPage';
@@ -46,7 +48,9 @@ const App = () => {
             <Route path="/my-products" element={<MyProductsPage />} />
             
             {/* Business App Routes */}
-            <Route path="/business-login" element={<BusinessLoginPage />} />
+            <Route path="/admin/login" element={<AdminLoginPage />} />
+            <Route path="/vendor/login" element={<VendorLoginPage />} />
+            <Route path="/support/login" element={<SupportLoginPage />} />
             <Route path="/dashboard/*" element={
               <ProtectedRoute allowedRoles={['ADMIN', 'VENDOR', 'SUPPORT']}>
                 <AdminDashboard />

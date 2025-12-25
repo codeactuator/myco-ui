@@ -1,18 +1,19 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user } = useAuth();
+  const location = useLocation();
 
   if (!user) {
-    // If no user, redirect to a business login page (which we can create next)
-    return <Navigate to="/business-login" />;
+    // Redirect to login page, saving the current location they were trying to go to
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // If user's role is not allowed, show an unauthorized message or redirect
-    return <Navigate to="/unauthorized" />;
+    // User is logged in but doesn't have permission
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return children;

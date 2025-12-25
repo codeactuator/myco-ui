@@ -4,6 +4,7 @@ import ManageVendors from './dashboards/admin/ManageVendors';
 import ManageOrders from './dashboards/admin/ManageOrders';
 import ManageProducts from './dashboards/admin/ManageProducts';
 import ManageQRConfig from './dashboards/admin/ManageQRConfig';
+import ManageUsers from './dashboards/admin/ManageUsers';
 
 const AdminView = () => {
   const [activeTab, setActiveTab] = useState('manage-orders');
@@ -12,6 +13,8 @@ const AdminView = () => {
     switch (activeTab) {
       case 'manage-vendors':
         return <ManageVendors />;
+      case 'manage-users':
+        return <ManageUsers />;
       case 'manage-orders':
         return <ManageOrders />;
       case 'manage-products':
@@ -25,6 +28,12 @@ const AdminView = () => {
 
   const navItems = (
     <>
+      <li className="nav-item">
+        <a href="#" className={`nav-link text-white ${activeTab === 'manage-users' ? 'active' : ''}`} onClick={() => setActiveTab('manage-users')}>
+          <i className="bi bi-people me-2"></i>
+          <span className="sidebar-text">Manage Users</span>
+        </a>
+      </li>
       <li className="nav-item">
         <a href="#" className={`nav-link text-white ${activeTab === 'manage-vendors' ? 'active' : ''}`} onClick={() => setActiveTab('manage-vendors')}>
           <i className="bi bi-people-fill me-2"></i>
