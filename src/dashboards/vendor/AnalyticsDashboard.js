@@ -14,6 +14,8 @@ import {
   Legend,
 } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
+import VendorService from '../../VendorService';
+import { useAuth } from '../../AuthContext';
 
 ChartJS.register(
   CategoryScale,
@@ -49,12 +51,6 @@ const allRegistrationLocations = [
   { id: 'loc13', name: 'Denver, CO', lat: 39.7392, lng: -104.9903, count: 29 },
   { id: 'loc14', name: 'Miami, FL', lat: 25.7617, lng: -80.1918, count: 48 },
   { id: 'loc15', name: 'Atlanta, GA', lat: 33.7490, lng: -84.3880, count: 37 },
-];
-
-const mockProducts = [
-  { id: 'P01', name: 'Premium Leather Wallet' },
-  { id: 'P02', name: 'City Explorer Backpack' },
-  { id: 'P03', name: 'Traveler\'s Passport Holder' },
 ];
 
 const qrCodeComparisonData = {
@@ -102,6 +98,15 @@ const salesForecastData = {
 const initialTotalSales = allRegistrationLocations.reduce((sum, loc) => sum + loc.count, 0);
 
 const AnalyticsDashboard = () => {
+  const { user } = useAuth();
+  const [vendor, setVendor] = useState(null);
+  const [analytics, setAnalytics] = useState({
+      totalPromotions: 0,
+      activePromotions: 0,
+      totalViews: 0,
+      totalLikes: 0
+  });
+  const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState('');
   const [filteredChartData, setFilteredChartData] = useState({ qrCodeComparisonData, salesForecastData });
   const [filteredLocations, setFilteredLocations] = useState(allRegistrationLocations);
@@ -113,7 +118,21 @@ const AnalyticsDashboard = () => {
   });
 
   useEffect(() => {
-    const product = mockProducts.find(p => `${p.name} (${p.id})` === selectedProduct);
+      if (user && user.vendorId) {
+          VendorService.getVendor(user.vendorId)
+              .then(res => setVendor(res.data))
+              .catch(err => console.error("Failed to fetch vendor", err));
+          VendorService.getVendorAnalytics(user.vendorId)
+              .then(res => setAnalytics(res.data))
+              .catch(err => console.error("Failed to fetch analytics", err));
+          VendorService.getVendorProducts(user.vendorId)
+              .then(res => setProducts(res.data))
+              .catch(err => console.error("Failed to fetch products", err));
+      }
+  }, [user]);
+
+  useEffect(() => {
+    const product = products.find(p => `${p.name} (${p.id})` === selectedProduct);
 
     if (product) {
       // Simulate fetching filtered data for the selected product
@@ -140,7 +159,7 @@ const AnalyticsDashboard = () => {
       setFilteredLocations(allRegistrationLocations);
       setLiveSalesCount(initialTotalSales);
     }
-  }, [selectedProduct]);
+  }, [selectedProduct, products]);
 
   useEffect(() => {
     // Simulate live sales data coming in for each location
@@ -166,7 +185,7 @@ const AnalyticsDashboard = () => {
       {/* The 'sticky-top' class makes this header stay at the top during scroll. 
           'py-3' adds padding, and 'bg-light' ensures content doesn't show through. */}
       <div className="d-flex justify-content-between align-items-center mb-4 sticky-top bg-light py-3" style={{ zIndex: 1020 }}>
-        <h4 className="mb-0">Sales & Engagement Analytics</h4>
+        <h4 className="mb-0">{vendor ? `${vendor.name} - ` : ''}Sales & Engagement Analytics</h4>
         <div className="d-flex align-items-center" style={{ minWidth: '300px' }}>
           <label htmlFor="product-search" className="form-label me-2 mb-0">Product:</label>
           <select
@@ -176,11 +195,47 @@ const AnalyticsDashboard = () => {
             value={selectedProduct}
           >
             <option value="">All Products</option>
-            {mockProducts.map(p => (
+            {products.map(p => (
               <option key={p.id} value={`${p.name} (${p.id})`}>{p.name}</option>
             ))}
           </select>
         </div>
+      </div>
+
+      {/* Real Data Summary Row */}
+      <div className="row mb-4">
+          <div className="col-md-3">
+              <div className="card text-white bg-primary h-100 shadow-sm">
+                  <div className="card-body d-flex flex-column justify-content-between">
+                      <h6 className="card-title"><i className="bi bi-tags-fill me-2"></i>Total Promotions</h6>
+                      <p className="display-6 fw-bold mb-0">{analytics.totalPromotions}</p>
+                  </div>
+              </div>
+          </div>
+          <div className="col-md-3">
+              <div className="card text-white bg-success h-100 shadow-sm">
+                  <div className="card-body d-flex flex-column justify-content-between">
+                      <h6 className="card-title"><i className="bi bi-check-circle-fill me-2"></i>Active</h6>
+                      <p className="display-6 fw-bold mb-0">{analytics.activePromotions}</p>
+                  </div>
+              </div>
+          </div>
+          <div className="col-md-3">
+              <div className="card text-white bg-info h-100 shadow-sm">
+                  <div className="card-body d-flex flex-column justify-content-between">
+                      <h6 className="card-title"><i className="bi bi-eye-fill me-2"></i>Total Views</h6>
+                      <p className="display-6 fw-bold mb-0">{analytics.totalViews}</p>
+                  </div>
+              </div>
+          </div>
+          <div className="col-md-3">
+              <div className="card text-white bg-warning h-100 shadow-sm">
+                  <div className="card-body d-flex flex-column justify-content-between">
+                      <h6 className="card-title"><i className="bi bi-heart-fill me-2"></i>Total Likes</h6>
+                      <p className="display-6 fw-bold mb-0">{analytics.totalLikes}</p>
+                  </div>
+              </div>
+          </div>
       </div>
 
       {/* KPI and Map Row */}

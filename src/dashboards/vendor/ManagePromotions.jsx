@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PromotionService from '../../PromotionService';
 import { useAuth } from '../../AuthContext';
 import { toast } from 'react-toastify';
+import API_BASE_URL from '../../config';
 
 const ManagePromotions = () => {
     const { user } = useAuth();
@@ -148,7 +149,7 @@ const ManagePromotions = () => {
                             <div className="card h-100 shadow-sm">
                                 {promo.imageUrl ? (
                                     <img 
-                                        src={`http://localhost:8080/uploads/${promo.imageUrl}`} 
+                                        src={`${API_BASE_URL}/uploads/${promo.imageUrl}`} 
                                         className="card-img-top" 
                                         alt={promo.code}
                                         style={{ height: '200px', objectFit: 'cover' }}
@@ -225,7 +226,7 @@ const ManagePromotions = () => {
                                 <div className="card">
                                     {previewPromo.imageUrl && (
                                         <img 
-                                            src={`http://localhost:8080/uploads/${previewPromo.imageUrl}`} 
+                                            src={`${API_BASE_URL}/uploads/${previewPromo.imageUrl}`} 
                                             className="card-img-top" 
                                             alt="Promotion"
                                             style={{ maxHeight: '200px', objectFit: 'cover' }} 
@@ -236,7 +237,7 @@ const ManagePromotions = () => {
                                             Check out this new promotion: {previewPromo.description}
                                             <br />
                                             <br />
-                                            View & Like here: http://localhost:3000/promotions/{previewPromo.id}
+                                            View & Like here: {window.location.origin}/promotions/{previewPromo.id}
                                         </p>
                                     </div>
                                 </div>

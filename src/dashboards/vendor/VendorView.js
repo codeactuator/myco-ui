@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../../DashboardLayout';
 import ManagePromotions from './ManagePromotions';
+import AnalyticsDashboard from './AnalyticsDashboard';
 
 const VendorView = () => {
   const [activeTab, setActiveTab] = useState('manage-promotions');
@@ -9,6 +10,8 @@ const VendorView = () => {
     switch (activeTab) {
       case 'manage-promotions':
         return <ManagePromotions />;
+      case 'dashboard':
+        return <AnalyticsDashboard />;
       default:
         return <div className="p-4"><h3>Welcome to Vendor Dashboard</h3><p>Select an option from the menu.</p></div>;
     }
