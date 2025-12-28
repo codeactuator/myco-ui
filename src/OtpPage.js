@@ -63,6 +63,9 @@ const OtpPage = () => {
         throw new Error(data.message || "OTP verification failed");
       }
 
+      // Store userId in session storage upon successful verification
+      sessionStorage.setItem("userId", userId);
+
       // Navigate to Home on success
       navigate("/home", { state: { userId, mobileNumber } });
     } catch (err) {

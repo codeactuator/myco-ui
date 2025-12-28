@@ -14,6 +14,7 @@ const ManageOrders = () => {
     default: { size: 128, fgColor: '#000000', bgColor: '#FFFFFF', rounded: false },
     products: {}
   });
+  const [shortCodes, setShortCodes] = useState({}); // Map of UUID -> ShortCode
 
   useEffect(() => {
     fetchVendors();
@@ -111,6 +112,29 @@ const ManageOrders = () => {
     } catch (error) {
       console.error("Error creating order:", error);
       toast.error('Error creating order.');
+    }
+  };
+
+  const handleViewCodes = async (order) => {
+    if (expandedOrderId === order.id) {
+      setExpandedOrderId(null);
+      return;
+    }
+    setExpandedOrderId(order.id);
+    
+    // Fetch short codes for these UUIDs
+    try {
+      const res = await fetch(`${API_BASE_URL}/v1/short-links/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(order.qrcodes)
+      });
+      if (res.ok) {
+        const newShortCodes = await res.json();
+        setShortCodes(prev => ({ ...prev, ...newShortCodes }));
+      }
+    } catch (error) {
+      console.error("Error fetching short codes:", error);
     }
   };
 
@@ -224,7 +248,7 @@ const ManageOrders = () => {
                   <td>
                     <button 
                       className="btn btn-sm btn-outline-info" 
-                      onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
+                      onClick={() => handleViewCodes(order)}
                     >
                       <i className={`bi me-1 ${expandedOrderId === order.id ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`}></i>
                       {expandedOrderId === order.id ? 'Hide' : 'View'} Codes
@@ -241,21 +265,28 @@ const ManageOrders = () => {
                       >
                         {order.qrcodes.map((qr, index) => {
                           const config = qrConfigs.products[order.productId] || qrConfigs.default;
+                          const shortCode = shortCodes[qr];
                           return (
                             <div 
                               key={index} 
                               className="text-center p-1"
                               style={{ border: '1px solid #ddd', borderRadius: config.rounded ? '8px' : '0' }}
                             >
-                              <QRCodeCanvas 
-                                id={`qr-${order.id}-${index}`} 
-                                value={`${window.location.origin}/scan?uid=${qr}`} 
-                                size={config.size} 
-                                fgColor={config.fgColor} 
-                                bgColor={config.bgColor} 
-                                level="M" 
-                                style={{ borderRadius: config.rounded ? '6px' : '0' }} 
-                              />
+                              {shortCode ? (
+                                <QRCodeCanvas 
+                                  id={`qr-${order.id}-${index}`} 
+                                  value={`${window.location.origin}/q/${shortCode}`} 
+                                  size={config.size} 
+                                  fgColor={config.fgColor} 
+                                  bgColor={config.bgColor} 
+                                  level="M" 
+                                  style={{ borderRadius: config.rounded ? '6px' : '0' }} 
+                                />
+                              ) : (
+                                <div className="d-flex align-items-center justify-content-center" style={{ width: config.size, height: config.size }}>
+                                  <div className="spinner-border spinner-border-sm text-secondary" role="status"></div>
+                                </div>
+                              )}
                             </div>
                           );
                         })}

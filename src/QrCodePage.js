@@ -9,9 +9,14 @@ import UserLayout from "./UserLayout";
 const QrCodePage = () => {
   const [qrOwnerId, setQrOwnerId] = useState(null);
   const navigate = useNavigate();
-  const userId = "3172b0e7-a538-4085-8cf8-fe7fae1b07ce"; // replace with real user ID (from login context, token, etc.)
+  const userId = sessionStorage.getItem("userId");
 
   useEffect(() => {
+    if (!userId) {
+      navigate("/signup");
+      return;
+    }
+
     const fetchQrCode = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/v1/qr/${userId}`);

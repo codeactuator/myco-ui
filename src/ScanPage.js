@@ -9,7 +9,8 @@ import UserLayout from './UserLayout';
 const ScanPage = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
-	const uid = new URLSearchParams(location.search).get('uid');
+	const [uid, setUid] = useState(null);
+	const [resolving, setResolving] = useState(true);
 
 	const fileInputRef = useRef(null);
 	const [capturedImages, setCapturedImages] = useState([]);
@@ -26,6 +27,51 @@ const ScanPage = () => {
 	const [isUploaded, setIsUploaded] = useState(false);
 	const [step, setStep] = useState('mobile');
 	const [coordinates, setCoordinates] = useState({ latitude: null, longitude: null });
+
+	useEffect(() => {
+		const resolveUid = async () => {
+			const params = new URLSearchParams(location.search);
+			let rawUid = params.get('uid');
+
+			if (!rawUid) {
+				setResolving(false);
+				return;
+			}
+
+			// Check if it's a UUID
+			const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+			if (uuidRegex.test(rawUid)) {
+				setUid(rawUid);
+				setResolving(false);
+				return;
+			}
+
+			// Extract code if it's a short URL
+			let shortCode = rawUid;
+			if (rawUid.includes('/q/')) {
+				const parts = rawUid.split('/q/');
+				if (parts.length > 1) {
+					shortCode = parts[1].split(/[?#]/)[0];
+				}
+			}
+
+			// Resolve short code
+			try {
+				const res = await fetch(`${API_BASE_URL}/v1/short-links/${shortCode}`);
+				if (res.ok) {
+					const data = await res.json();
+					setUid(data.uuid);
+				} else {
+					console.error("Failed to resolve short code");
+				}
+			} catch (error) {
+				console.error("Error resolving short code", error);
+			} finally {
+				setResolving(false);
+			}
+		};
+		resolveUid();
+	}, [location.search]);
 
 	// ⬇️ Check sessionStorage for userId on load
 	useEffect(() => {
@@ -236,8 +282,18 @@ const ScanPage = () => {
 		return true;
 	};
 
+	if (resolving) {
+		return (
+			<UserLayout pageTitle="Scan" hideNav={true}>
+				<div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+					<div className="spinner-border text-primary" role="status"></div>
+				</div>
+			</UserLayout>
+		);
+	}
+
 	return (
-		<UserLayout pageTitle="Scan">
+		<UserLayout pageTitle="Scan" hideNav={step !== 'capture'}>
 			<div className="container">
 				<div className="row justify-content-center">
 					<div className="col-lg-6">

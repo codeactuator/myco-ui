@@ -26,6 +26,7 @@ import MyProductsPage from './MyProductsPage';
 import UserLayout from './UserLayout';
 import VendorView from './VendorView';
 import PromotionPreviewPage from './PromotionPreviewPage';
+import ShortUrlHandler from './ShortUrlHandler';
 
 const DashboardSwitcher = () => {
   const { user } = useAuth();
@@ -53,6 +54,7 @@ const App = () => {
             <Route path="/add-contact" element={<AddContact />} />
             <Route path="/qr" element={<QrCodePage />} />
             <Route path="/scan" element={<ScanPage />} />
+            <Route path="/q/:shortId" element={<ShortUrlHandler />} />
             <Route path="/posts" element={<PostListPage />} />
             <Route path="/np" element={<NotificationPage />} />
             <Route path="/thank-you" element={<ThankYouPage />} />
