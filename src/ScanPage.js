@@ -10,6 +10,7 @@ const ScanPage = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const [uid, setUid] = useState(null);
+	const [ownerId, setOwnerId] = useState(null);
 	const [resolving, setResolving] = useState(true);
 
 	const fileInputRef = useRef(null);
@@ -72,6 +73,24 @@ const ScanPage = () => {
 		};
 		resolveUid();
 	}, [location.search]);
+
+	// Fetch Owner ID when UID (Product ID) is resolved
+	useEffect(() => {
+		if (uid) {
+			const fetchOwner = async () => {
+				try {
+					const res = await fetch(`${API_BASE_URL}/v1/products/owner/${uid}`);
+					if (res.ok) {
+						const data = await res.json();
+						setOwnerId(data);
+					}
+				} catch (error) {
+					console.error("Error fetching product owner:", error);
+				}
+			};
+			fetchOwner();
+		}
+	}, [uid]);
 
 	// ⬇️ Check sessionStorage for userId on load
 	useEffect(() => {
@@ -231,13 +250,18 @@ const ScanPage = () => {
 	};
 
 	const makeCallToOwner = async () => {
+		if (!ownerId) {
+			alert("This product is not registered to any owner yet.");
+			return;
+		}
+
 		try {
 			const res = await fetch(`${API_BASE_URL}/v1/call`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 				fromUserId: userId,
-				toUserId: uid,
+				toUserId: ownerId,
 				mobileNumber,
 				capturedImages }),
 			});
@@ -257,6 +281,11 @@ const ScanPage = () => {
 	const uploadCapturedImage = async () => {
 		if (capturedImages.length === 0) return false;
 
+		if (!ownerId) {
+			console.error("Cannot upload: Owner not found for this product.");
+			return false;
+		}
+
 		for (let i = 0; i < capturedImages.length; i++) {
 			const resized = await resizeBase64Image(capturedImages[i]);
 			const imageBlob = base64ToBlob(resized);
@@ -264,7 +293,7 @@ const ScanPage = () => {
 			formData.append('file', imageBlob, `captured-${i + 1}.jpg`);
 			formData.append('title', 'Add Title');
 			formData.append('postedBy', userId);
-			formData.append('postedFor', uid);
+			formData.append('postedFor', ownerId);
 
 			if (coordinates.latitude && coordinates.longitude) {
 				formData.append('latitude', coordinates.latitude);

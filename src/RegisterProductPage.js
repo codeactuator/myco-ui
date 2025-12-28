@@ -12,23 +12,51 @@ const RegisterProductPage = () => {
   const [isRegistering, setIsRegistering] = useState(false);
 
   useEffect(() => {
-    // Extract UID from URL
-    const queryParams = new URLSearchParams(location.search);
-    let productId = queryParams.get('uid');
+    const resolveUid = async () => {
+      // Extract UID from URL
+      const queryParams = new URLSearchParams(location.search);
+      let rawUid = queryParams.get('uid');
 
-    // In case the full URL was passed as the uid, extract the uid from it.
-    try {
-      const url = new URL(productId);
-      // If parsing succeeds, get the 'uid' param from the nested URL.
-      productId = url.searchParams.get('uid') || productId;
-    } catch (e) { /* Not a URL, proceed as normal */ }
+      if (!rawUid) {
+        toast.error("No product ID found in URL.");
+        navigate("/home"); // Redirect if no UID
+        return;
+      }
 
-    if (productId) {
-      setUid(productId);
-    } else {
-      toast.error("No product ID found in URL.");
-      navigate("/home"); // Redirect if no UID
-    }
+      // Check if it's a UUID
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(rawUid)) {
+        setUid(rawUid);
+        return;
+      }
+
+      // Extract code if it's a short URL (contains /q/)
+      let shortCode = rawUid;
+      if (rawUid.includes('/q/')) {
+        const parts = rawUid.split('/q/');
+        if (parts.length > 1) {
+          shortCode = parts[1].split(/[?#]/)[0];
+        }
+      }
+
+      // Resolve short code
+      try {
+        const res = await fetch(`${API_BASE_URL}/v1/short-links/${shortCode}`);
+        if (res.ok) {
+          const data = await res.json();
+          setUid(data.uuid);
+        } else {
+          toast.error("Invalid product code.");
+          navigate("/home");
+        }
+      } catch (error) {
+        console.error("Error resolving short code", error);
+        toast.error("Failed to resolve product code.");
+        navigate("/home");
+      }
+    };
+
+    resolveUid();
 
     // Get logged-in user ID from session storage
     const storedUserId = sessionStorage.getItem("userId");
@@ -65,10 +93,8 @@ const RegisterProductPage = () => {
       navigate("/my-products"); // Redirect to a page showing user's products
 
     } catch (error) {
-      // For now, treat failure as success for demonstration purposes.
-      console.error("Registration API call failed, but proceeding as success for demo:", error);
-      toast.success(`Product ${uid} registered successfully! (Demo)`);
-      navigate("/my-products");
+      console.error("Registration failed:", error);
+      toast.error(error.message || "Failed to register product.");
     } finally {
       setIsRegistering(false);
     }
