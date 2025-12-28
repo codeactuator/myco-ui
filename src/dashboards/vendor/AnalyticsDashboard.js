@@ -104,7 +104,8 @@ const AnalyticsDashboard = () => {
       totalPromotions: 0,
       activePromotions: 0,
       totalViews: 0,
-      totalLikes: 0
+      totalLikes: 0,
+      promotionStats: []
   });
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState('');
@@ -179,6 +180,22 @@ const AnalyticsDashboard = () => {
     // Cleanup interval on component unmount or when product filter changes
     return () => clearInterval(interval);
   }, []); // Rerun simulation if the product filter changes
+
+  const promotionPerformanceData = {
+    labels: analytics.promotionStats ? analytics.promotionStats.map(p => p.name) : [],
+    datasets: [
+      {
+        label: 'Views',
+        data: analytics.promotionStats ? analytics.promotionStats.map(p => p.views) : [],
+        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+      },
+      {
+        label: 'Likes',
+        data: analytics.promotionStats ? analytics.promotionStats.map(p => p.likes) : [],
+        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+      },
+    ],
+  };
 
   return (
     <div className="container-fluid">
@@ -292,8 +309,8 @@ const AnalyticsDashboard = () => {
         <div className="col-md-6 mb-4">
           <div className="card shadow-sm">
             <div className="card-body">
-              <h5 className="card-title">QR Code Funnel (Created vs. Sold)</h5>
-              <Bar data={filteredChartData.qrCodeComparisonData} />
+              <h5 className="card-title">Top Promotions Performance</h5>
+              <Bar data={promotionPerformanceData} />
             </div>
           </div>
         </div>
