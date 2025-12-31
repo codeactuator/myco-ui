@@ -58,7 +58,7 @@ const NotificationDetailsPage = () => {
 
           {images.length > 0 ? (
             <img
-              src={images[0].filePath}
+              src={`${API_BASE_URL}/v1/uploads/${images[0].filePath.split(/[/\\]/).pop()}`}
               alt="Post visual"
               className="card-img-bottom"
               style={{ objectFit: 'cover', height: '300px' }}

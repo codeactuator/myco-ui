@@ -78,7 +78,7 @@ const NotificationPage = () => {
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/v1/posts/by-user/${userId}`);
+      const res = await fetch(`${API_BASE_URL}/v1/posts/alerts/${userId}`);
       const data = await res.json();
 	  console.log(data);
 
@@ -173,7 +173,7 @@ const NotificationPage = () => {
                 <div className="position-relative">
                   {post.images && post.images.length > 0 ? (
                     <img
-                      src={post.images[0].filePath}
+                      src={`${API_BASE_URL}/v1/uploads/${post.images[0].filePath.split(/[/\\]/).pop()}`}
                       alt="Post"
                       className="card-img-top"
                       style={{ objectFit: 'cover', height: '200px' }}

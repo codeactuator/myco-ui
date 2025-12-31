@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import API_BASE_URL from './config';
 
 const navLinkStyles = {
   display: 'flex',
@@ -18,6 +19,14 @@ const activeLinkStyles = {
 
 const UserLayout = ({ children, pageTitle, hideNav = false }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
+  // Initialize state directly from sessionStorage to avoid delay/missing data on mount
+  const [userInfo, setUserInfo] = useState(() => {
+    const userId = sessionStorage.getItem("userId");
+    const userName = sessionStorage.getItem("userName");
+    const userMobile = sessionStorage.getItem("userMobile");
+    return userId ? { name: userName || 'User', mobileNumber: userMobile } : null;
+  });
+  
   const navigate = useNavigate();
 
   const toggleLeftNav = () => setIsCollapsed(!isCollapsed);
@@ -33,6 +42,23 @@ const UserLayout = ({ children, pageTitle, hideNav = false }) => {
     sessionStorage.clear();
     navigate('/signup');
   };
+
+  useEffect(() => {
+    const userId = sessionStorage.getItem("userId");
+    if (userId) {
+      fetch(`${API_BASE_URL}/v1/users/id/${userId}`)
+        .then((res) => {
+          if (res.ok) return res.json();
+          throw new Error("Failed to fetch user info");
+        })
+        .then((data) => {
+          setUserInfo({ name: data.name || 'User', mobileNumber: data.mobileNumber });
+          sessionStorage.setItem("userName", data.name || "User");
+          sessionStorage.setItem("userMobile", data.mobileNumber);
+        })
+        .catch((err) => console.error(err));
+    }
+  }, []);
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -93,6 +119,12 @@ const UserLayout = ({ children, pageTitle, hideNav = false }) => {
             <h4 className="mb-0">{pageTitle}</h4>
           </div>
           <div className="d-flex align-items-center">
+            {!hideNav && userInfo && (
+              <div className="me-3 text-end" style={{ lineHeight: '1.2' }}>
+                <div className="fw-bold" style={{ fontSize: '0.9rem' }}>{userInfo.name}</div>
+                <div className="text-muted" style={{ fontSize: '0.8rem' }}>{userInfo.mobileNumber}</div>
+              </div>
+            )}
             {!hideNav && (
             <button className="btn btn-link text-danger" onClick={handleLogout} title="Logout">
               <i className="bi bi-box-arrow-right fs-4"></i>

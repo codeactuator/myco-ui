@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from './config';
 import UserLayout from './UserLayout';
+import OtpInputs from './OtpInputs';
 
 const AddContact = () => {
   const navigate = useNavigate();
@@ -12,6 +13,9 @@ const AddContact = () => {
   const [error, setError] = useState('');
   const [contacts, setContacts] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [step, setStep] = useState('details'); // 'details' or 'otp'
+  const [otp, setOtp] = useState(['', '', '', '']);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
     const userId = sessionStorage.getItem("userId");
@@ -50,7 +54,7 @@ const AddContact = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSendOtp = async (e) => {
     e.preventDefault();
     const userId = sessionStorage.getItem("userId");
 
@@ -68,6 +72,62 @@ const AddContact = () => {
     setError("");
 
     try {
+      const res = await fetch(`${API_BASE_URL}/v1/otp/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobileNumber: number }),
+      });
+      
+      if (!res.ok) throw new Error("Failed to send OTP.");
+      
+      setStep('otp');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyAndSave = async () => {
+    const fullOtp = otp.join("");
+    if (fullOtp.length < 4) {
+      setError("Please enter valid OTP");
+      return;
+    }
+
+    setIsVerifying(true);
+    setError("");
+    const userId = sessionStorage.getItem("userId");
+
+    try {
+      // 1. Verify OTP
+      const verifyRes = await fetch(`${API_BASE_URL}/v1/otp/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobileNumber: number, otp: fullOtp })
+      });
+
+      if (!verifyRes.ok) throw new Error("Invalid OTP");
+
+      // 2. Ensure Contact is a User
+      let contactUserId;
+      const userCheckRes = await fetch(`${API_BASE_URL}/v1/users/${number}`);
+      if (userCheckRes.ok) {
+        const userData = await userCheckRes.json();
+        contactUserId = userData.id;
+      } else {
+        // Create User if not exists
+        const createUserRes = await fetch(`${API_BASE_URL}/v1/users`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: name, mobileNumber: number }),
+        });
+        if (!createUserRes.ok) throw new Error("Failed to register contact as user");
+        const newUserData = await createUserRes.json();
+        contactUserId = newUserData.id;
+      }
+
+      // 3. Save Contact
       const response = await fetch(`${API_BASE_URL}/v1/contacts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -86,13 +146,31 @@ const AddContact = () => {
       setName('');
       setNumber('');
       setRelation('');
+      setOtp(['', '', '', '']);
+      setStep('details');
       fetchContacts(userId);
       setShowModal(false);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
+      setIsVerifying(false);
     }
+  };
+
+  const handleOtpChange = (index, value) => {
+    if (!/^\d?$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    if (value && index < 3) document.getElementById(`otp-${index + 1}`)?.focus();
+  };
+
+  const resetModal = () => {
+    setShowModal(false);
+    setStep('details');
+    setError('');
+    setOtp(['', '', '', '']);
   };
 
   return (
@@ -115,10 +193,11 @@ const AddContact = () => {
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">New Emergency Contact</h5>
-                  <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
+                  <button type="button" className="btn-close" onClick={resetModal}></button>
                 </div>
                 <div className="modal-body">
-                  <form onSubmit={handleSubmit}>
+                  {step === 'details' ? (
+                  <form onSubmit={handleSendOtp}>
                     <div className="mb-3">
                       <label className="form-label">Name</label>
                       <input type="text" className="form-control" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. John Doe" />
@@ -140,9 +219,24 @@ const AddContact = () => {
                     </div>
                     {error && <div className="text-danger mb-3 text-center">{error}</div>}
                     <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-                      {loading ? 'Saving...' : 'Save Contact'}
+                      {loading ? 'Sending OTP...' : 'Verify & Save Contact'}
                     </button>
                   </form>
+                  ) : (
+                    <div>
+                      <p className="text-center mb-3">Enter OTP sent to <strong>{number}</strong></p>
+                      <OtpInputs otp={otp} handleOtpChange={handleOtpChange} />
+                      {error && <div className="text-danger mt-3 text-center">{error}</div>}
+                      <button 
+                        className="btn btn-success w-100 mt-4" 
+                        onClick={handleVerifyAndSave}
+                        disabled={isVerifying}
+                      >
+                        {isVerifying ? 'Verifying...' : 'Verify OTP & Save'}
+                      </button>
+                      <button className="btn btn-link w-100 mt-2" onClick={() => setStep('details')}>Back</button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
