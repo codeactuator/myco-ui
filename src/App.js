@@ -27,6 +27,7 @@ import UserLayout from './UserLayout';
 import VendorView from './VendorView';
 import PromotionPreviewPage from './PromotionPreviewPage';
 import ShortUrlHandler from './ShortUrlHandler';
+import UserDetailsPage from './UserDetailsPage';
 
 const DashboardSwitcher = () => {
   const { user } = useAuth();
@@ -62,6 +63,7 @@ const App = () => {
             <Route path="/register" element={<RegisterProductPage />} />
             <Route path="/my-products" element={<MyProductsPage />} />
             <Route path="/promotions/:id" element={<PromotionPreviewPage />} />
+            <Route path="/user-details" element={<UserDetailsPage />} />
             
             {/* Business App Routes */}
             <Route path="/admin/login" element={<AdminLoginPage />} />

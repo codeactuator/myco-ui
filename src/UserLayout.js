@@ -102,6 +102,12 @@ const UserLayout = ({ children, pageTitle, hideNav = false }) => {
               {!isCollapsed && <span>Add Contact</span>}
             </NavLink>
           </li>
+          <li>
+            <NavLink to="/user-details" style={({ isActive }) => ({ ...(isCollapsed ? collapsedNavLinkStyles : navLinkStyles), ...(isActive ? activeLinkStyles : {}) })} title="User Details">
+              <i className={`bi bi-person-circle fs-4 ${!isCollapsed ? 'me-3' : ''}`}></i>
+              {!isCollapsed && <span>User Details</span>}
+            </NavLink>
+          </li>
         </ul>
       </nav>
       )}
