@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
-import API_BASE_URL from './config';
+import API_BASE_URL, { GOOGLE_MAPS_API_KEY } from './config';
 import UserLayout from './UserLayout';
 
 import { Client } from '@stomp/stompjs';
@@ -31,7 +31,7 @@ const PostListPage = () => {
 
   // Load Google Maps script
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: "AIzaSyAzCNCNbdAejKSgQrUgkshTJ_gapr6aioc", // <-- Replace with your API key
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
   });
 
   useEffect(() => {
@@ -209,11 +209,11 @@ const PostListPage = () => {
                       ) : (
                         <GoogleMap
                           mapContainerStyle={mapContainerStyle}
-                          center={{ lat: post.latitude, lng: post.longitude }}
+                          center={{ lat: parseFloat(post.latitude), lng: parseFloat(post.longitude) }}
                           zoom={13}
                         >
                           <Marker
-                            position={{ lat: post.latitude, lng: post.longitude }}
+                            position={{ lat: parseFloat(post.latitude), lng: parseFloat(post.longitude) }}
                             title={post.location || 'Location'}
                           />
                         </GoogleMap>

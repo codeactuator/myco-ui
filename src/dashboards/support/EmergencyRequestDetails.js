@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
+import { GOOGLE_MAPS_API_KEY } from '../../config';
 
 const mapContainerStyle = {
   width: '100%',
@@ -29,7 +30,7 @@ const EmergencyRequestDetails = () => {
   const { requestId } = useParams();
   const navigate = useNavigate();
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: 'AIzaSyAzCNCNbdAejKSgQrUgkshTJ_gapr6aioc', // Replace with your actual API key
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
   });
 
   return (

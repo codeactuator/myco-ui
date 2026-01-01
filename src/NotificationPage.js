@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
-import API_BASE_URL from './config';
+import API_BASE_URL, { GOOGLE_MAPS_API_KEY } from './config';
 import UserLayout from './UserLayout';
 
 import { Client } from '@stomp/stompjs';
@@ -20,6 +20,7 @@ const NotificationPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [visibleSections, setVisibleSections] = useState({});
+  const [expandedMedia, setExpandedMedia] = useState(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ const NotificationPage = () => {
 
   // Load Google Maps script
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: "AIzaSyAzCNCNbdAejKSgQrUgkshTJ_gapr6aioc", // <-- Replace with your API key
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
   });
 
   useEffect(() => {
@@ -143,10 +144,45 @@ const NotificationPage = () => {
     });
   };
 
+  const handleExpandImage = (e, imageUrl) => {
+    e.stopPropagation();
+    setExpandedMedia({ type: 'image', data: imageUrl });
+  };
+
+  const handleExpandMap = (latitude, longitude) => {
+    setExpandedMedia({ type: 'map', data: { lat: parseFloat(latitude), lng: parseFloat(longitude) } });
+  };
+
+  const closeExpandedMedia = () => setExpandedMedia(null);
+
   return (
     <UserLayout pageTitle="Notifications">
       {loading && <p className="text-center mt-4">Loading posts...</p>}
       {error && <p className="text-danger text-center mt-4">{error}</p>}
+
+      {expandedMedia && (
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1055 }} onClick={closeExpandedMedia}>
+          <div className="modal-dialog modal-fullscreen p-4">
+            <div className="modal-content bg-transparent border-0 h-100 d-flex justify-content-center align-items-center">
+                <button type="button" className="btn-close btn-close-white position-absolute top-0 end-0 m-4" onClick={closeExpandedMedia}></button>
+                {expandedMedia.type === 'image' && (
+                  <img src={expandedMedia.data} alt="Expanded" className="img-fluid" style={{ maxHeight: '90vh', maxWidth: '90vw' }} />
+                )}
+                {expandedMedia.type === 'map' && (
+                  <div style={{ width: '90vw', height: '90vh' }} onClick={(e) => e.stopPropagation()}>
+                     <GoogleMap
+                        mapContainerStyle={{ width: '100%', height: '100%' }}
+                        center={expandedMedia.data}
+                        zoom={15}
+                      >
+                        <Marker position={expandedMedia.data} />
+                      </GoogleMap>
+                  </div>
+                )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="container py-4">
         <div className="row g-4">
@@ -172,14 +208,22 @@ const NotificationPage = () => {
 
                 <div className="position-relative">
                   {post.images && post.images.length > 0 ? (
-                    <img
-                      src={`${API_BASE_URL}/v1/uploads/${post.images[0].filePath.split(/[/\\]/).pop()}`}
-                      alt="Post"
-                      className="card-img-top"
-                      style={{ objectFit: 'cover', height: '200px' }}
-                      loading="lazy"
-					  onClick={() => navigate(`/notification-details/${post.id}`)}
-                    />
+                    <>
+                      <img
+                        src={`${API_BASE_URL}/v1/uploads/${post.images[0].filePath.split(/[/\\]/).pop()}`}
+                        alt="Post"
+                        className="card-img-top"
+                        style={{ objectFit: 'cover', height: '200px' }}
+                        loading="lazy"
+                        onClick={() => navigate(`/notification-details/${post.id}`)}
+                      />
+                      <button 
+                          className="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 opacity-75"
+                          onClick={(e) => handleExpandImage(e, `${API_BASE_URL}/v1/uploads/${post.images[0].filePath.split(/[/\\]/).pop()}`)}
+                      >
+                          <i className="bi bi-arrows-fullscreen"></i>
+                      </button>
+                    </>
                   ) : (
                     <div className="bg-secondary d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
                       <span className="text-white">No Image</span>
@@ -204,7 +248,14 @@ const NotificationPage = () => {
 
                 <div className="card-body">
                   {visibleSections[post.id]?.map && post.latitude && post.longitude && (
-                    <div style={{ height: '200px' }} className="mb-3">
+                    <div style={{ height: '200px' }} className="mb-3 position-relative">
+                      <button 
+                          className="btn btn-sm btn-light position-absolute top-0 end-0 m-2 shadow-sm"
+                          style={{ zIndex: 10 }}
+                          onClick={() => handleExpandMap(post.latitude, post.longitude)}
+                      >
+                          <i className="bi bi-arrows-fullscreen"></i>
+                      </button>
                       {!isLoaded ? (
                         <p>Loading map...</p>
                       ) : loadError ? (
@@ -212,11 +263,11 @@ const NotificationPage = () => {
                       ) : (
                         <GoogleMap
                           mapContainerStyle={mapContainerStyle}
-                          center={{ lat: post.latitude, lng: post.longitude }}
+                          center={{ lat: parseFloat(post.latitude), lng: parseFloat(post.longitude) }}
                           zoom={13}
                         >
                           <Marker
-                            position={{ lat: post.latitude, lng: post.longitude }}
+                            position={{ lat: parseFloat(post.latitude), lng: parseFloat(post.longitude) }}
                             title={post.location || 'Location'}
                           />
                         </GoogleMap>

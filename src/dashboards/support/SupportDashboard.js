@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import API_BASE_URL from '../../config';
+import API_BASE_URL, { GOOGLE_MAPS_API_KEY } from '../../config';
 import { useAuth } from '../../AuthContext';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -7,7 +7,7 @@ import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
 
 const mapContainerStyle = {
   width: '100%',
-  height: '200px',
+  height: '350px',
 };
 
 const SupportDashboard = () => {
@@ -17,6 +17,8 @@ const SupportDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [visibleSections, setVisibleSections] = useState({});
+  const [expandedPostId, setExpandedPostId] = useState(null);
+  const [postContacts, setPostContacts] = useState({}); // Map of postId -> contacts array
 
   const { user } = useAuth();
   const userId = user?.id || sessionStorage.getItem("userId");
@@ -25,7 +27,7 @@ const SupportDashboard = () => {
   const subscribedPostIdsRef = useRef(new Set());
 
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: "AIzaSyAzCNCNbdAejKSgQrUgkshTJ_gapr6aioc",
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
   });
 
   useEffect(() => {
@@ -36,6 +38,21 @@ const SupportDashboard = () => {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (expandedPostId) {
+      const post = posts.find(p => p.id === expandedPostId);
+      if (post) {
+        const postedForId = post.postedFor?.id || (typeof post.postedFor === 'string' ? post.postedFor : null);
+        if (postedForId && !postContacts[expandedPostId]) {
+          fetchContacts(postedForId, expandedPostId);
+        }
+        if (!postComments[expandedPostId]) {
+          fetchPostComments(expandedPostId);
+        }
+      }
+    }
+  }, [expandedPostId, posts]);
 
   const connectWebSocket = (postIds) => {
     if (stompClientRef.current) return;
@@ -103,6 +120,18 @@ const SupportDashboard = () => {
     }
   };
 
+  const fetchContacts = async (targetUserId, postId) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/v1/contacts/${targetUserId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPostContacts(prev => ({ ...prev, [postId]: data }));
+      }
+    } catch (error) {
+      console.error("Error fetching contacts:", error);
+    }
+  };
+
   const handleAddComment = async (postId) => {
     const text = commentInputs[postId];
     if (!text?.trim()) return;
@@ -145,51 +174,118 @@ const SupportDashboard = () => {
       {loading && <p>Loading requests...</p>}
       {error && <p className="text-danger">{error}</p>}
       
-      <div className="row g-4">
-        {posts.map((post) => (
-          <div key={post.id} className="col-12 col-xl-6">
-            <div className="card shadow-sm h-100">
-              <div className="card-header d-flex justify-content-between align-items-center bg-danger text-white">
-                 <span><strong>{post.postedByName || 'Unknown User'}</strong> - Emergency</span>
-                 <small>{new Date(post.createdAt).toLocaleString()}</small>
+      {!expandedPostId ? (
+        <div className="list-group">
+          {posts.map((post) => (
+            <button 
+              key={post.id} 
+              className="list-group-item list-group-item-action" 
+              onClick={() => setExpandedPostId(post.id)}
+            >
+              <div className="d-flex w-100 justify-content-between">
+                <h5 className="mb-1">
+                  {post.postedByName || 'Unknown User'}
+                  {post.postedFor?.name && <span className="ms-1 text-muted" style={{ fontSize: '0.9em' }}>for {post.postedFor.name}</span>}
+                </h5>
+                <small>{new Date(post.createdAt).toLocaleString()}</small>
               </div>
-              <div className="card-body">
-                 <p className="card-text">{post.description || 'No description provided.'}</p>
-                 <div className="row">
-                    <div className="col-md-6 mb-3">
-                        {post.images && post.images.length > 0 ? (
-                            <img src={`${API_BASE_URL}/v1/uploads/${post.images[0].filePath.split(/[/\\]/).pop()}`} alt="Evidence" className="img-fluid rounded" style={{ objectFit: 'cover', height: '200px', width: '100%' }} />
-                        ) : <div className="bg-light d-flex align-items-center justify-content-center" style={{height: '200px'}}>No Image</div>}
-                    </div>
-                    <div className="col-md-6 mb-3">
-                        {post.latitude && post.longitude && isLoaded ? (
-                            <GoogleMap mapContainerStyle={mapContainerStyle} center={{ lat: post.latitude, lng: post.longitude }} zoom={14}>
-                                <Marker position={{ lat: post.latitude, lng: post.longitude }} />
-                            </GoogleMap>
-                        ) : <div className="bg-light d-flex align-items-center justify-content-center" style={{height: '200px'}}>No Location</div>}
-                    </div>
-                 </div>
-              </div>
-              <div className="card-footer bg-white">
-                 <button className="btn btn-outline-primary btn-sm mb-3" onClick={() => toggleSection(post.id, 'comments')}>{visibleSections[post.id]?.comments ? 'Hide Chat' : 'Show Chat'}</button>
-                 {visibleSections[post.id]?.comments && (
-                    <div>
-                        <div className="border rounded p-2 mb-2" style={{maxHeight: '200px', overflowY: 'auto', backgroundColor: '#f8f9fa'}}>
-                            {postComments[post.id]?.length > 0 ? (
-                                <ul className="list-unstyled mb-0">{postComments[post.id].map((c, i) => (<li key={i} className="mb-2"><strong>{c.userName || c.commentedBy}:</strong> {c.text}</li>))}</ul>
-                            ) : <p className="text-muted small mb-0">No messages yet.</p>}
-                        </div>
-                        <div className="input-group">
-                            <input type="text" className="form-control" placeholder="Type a message..." value={commentInputs[post.id] || ''} onChange={(e) => setCommentInputs(prev => ({...prev, [post.id]: e.target.value}))} />
-                            <button className="btn btn-primary" onClick={() => handleAddComment(post.id)}>Send</button>
-                        </div>
-                    </div>
-                 )}
+              <p className="mb-1">{post.description || 'No description provided.'}</p>
+              <small className="text-danger">Click to view details</small>
+            </button>
+          ))}
+          {!loading && posts.length === 0 && <p>No emergency requests found.</p>}
+        </div>
+      ) : (
+        <div className="row">
+          {posts.filter(p => p.id === expandedPostId).map((post) => (
+            <div key={post.id} className="col-12">
+              <button className="btn btn-secondary mb-3" onClick={() => setExpandedPostId(null)}>
+                <i className="bi bi-arrow-left me-2"></i> Back to List
+              </button>
+              <div className="card shadow-sm h-100">
+                <div className="card-header d-flex justify-content-between align-items-center bg-danger text-white">
+                   <span><strong>{post.postedByName || 'Unknown User'}</strong> - Emergency {post.postedFor?.name && `for ${post.postedFor.name}`}</span>
+                   <small>{new Date(post.createdAt).toLocaleString()}</small>
+                </div>
+                <div className="card-body">
+                   <p className="card-text">{post.description || 'No description provided.'}</p>
+                   <div className="row">
+                      <div className="col-md-6 mb-3">
+                          {post.images && post.images.length > 0 ? (
+                              <img src={`${API_BASE_URL}/v1/uploads/${post.images[0].filePath.split(/[/\\]/).pop()}`} alt="Evidence" className="img-fluid rounded" style={{ objectFit: 'cover', height: '350px', width: '100%' }} />
+                          ) : <div className="bg-light d-flex align-items-center justify-content-center" style={{height: '350px'}}>No Image</div>}
+                      </div>
+                      <div className="col-md-6 mb-3">
+                          {post.latitude && post.longitude && isLoaded ? (
+                              <GoogleMap mapContainerStyle={mapContainerStyle} center={{ lat: parseFloat(post.latitude), lng: parseFloat(post.longitude) }} zoom={14}>
+                                  <Marker position={{ lat: parseFloat(post.latitude), lng: parseFloat(post.longitude) }} />
+                              </GoogleMap>
+                          ) : <div className="bg-light d-flex align-items-center justify-content-center" style={{height: '350px'}}>No Location</div>}
+                      </div>
+                   </div>
+                   
+                   <div className="row mt-4">
+                       {/* Emergency Contacts - Left Side */}
+                       <div className="col-md-5 border-end">
+                           <h5 className="mb-3">Emergency Contacts</h5>
+                           {postContacts[post.id] && postContacts[post.id].length > 0 ? (
+                               <div className="table-responsive">
+                                   <table className="table table-sm table-bordered table-hover">
+                                       <thead className="table-light">
+                                           <tr>
+                                               <th>Name</th>
+                                               <th>Relation</th>
+                                               <th>Number</th>
+                                               <th>Action</th>
+                                           </tr>
+                                       </thead>
+                                       <tbody>
+                                           {postContacts[post.id].map(contact => (
+                                               <tr key={contact.id}>
+                                                   <td>{contact.contactName}</td>
+                                                   <td>{contact.relation}</td>
+                                                   <td>{contact.contactNumber}</td>
+                                                   <td>
+                                                       <a href={`tel:${contact.contactNumber}`} className="btn btn-sm btn-success text-white text-decoration-none">
+                                                           <i className="bi bi-telephone-fill me-1"></i>
+                                                       </a>
+                                                   </td>
+                                               </tr>
+                                           ))}
+                                       </tbody>
+                                   </table>
+                               </div>
+                           ) : (
+                               <p className="text-muted fst-italic">No emergency contacts found for this user.</p>
+                           )}
+                       </div>
+
+                       {/* Chat Box - Right Side */}
+                       <div className="col-md-7">
+                           <h5 className="mb-3">Live Chat</h5>
+                           <div className="border rounded p-2 mb-2" style={{maxHeight: '300px', overflowY: 'auto', backgroundColor: '#f8f9fa', minHeight: '200px'}}>
+                                {postComments[post.id]?.length > 0 ? (
+                                    <ul className="list-unstyled mb-0">
+                                        {postComments[post.id].map((c, i) => (
+                                            <li key={i} className="mb-2">
+                                                <strong>{c.userName || c.commentedBy}:</strong> {c.text}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : <p className="text-muted small mb-0">No messages yet.</p>}
+                           </div>
+                           <div className="input-group">
+                                <input type="text" className="form-control" placeholder="Type a message..." value={commentInputs[post.id] || ''} onChange={(e) => setCommentInputs(prev => ({...prev, [post.id]: e.target.value}))} />
+                                <button className="btn btn-primary" onClick={() => handleAddComment(post.id)}>Send</button>
+                           </div>
+                       </div>
+                   </div>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
