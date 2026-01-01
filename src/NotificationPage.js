@@ -78,7 +78,7 @@ const NotificationPage = () => {
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/v1/posts/alerts/${userId}`);
+      const res = await fetch(`${API_BASE_URL}/v1/posts/alerts/user/${userId}`);
       const data = await res.json();
 	  console.log(data);
 

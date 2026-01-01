@@ -16,9 +16,6 @@ import ThankYouPage from "./ThankYouPage";
 import PostListPage from "./PostListPage";
 import NotificationPage from "./NotificationPage";
 import NotificationDetailsPage from './NotificationDetailsPage';
-import AdminLoginPage from './AdminLoginPage';
-import VendorLoginPage from './VendorLoginPage';
-import SupportLoginPage from './SupportLoginPage';
 import ProtectedRoute from './ProtectedRoute';
 import AdminDashboard from './AdminDashboard';
 import RegisterProductPage from './RegisterProductPage';
@@ -28,6 +25,7 @@ import VendorView from './VendorView';
 import PromotionPreviewPage from './PromotionPreviewPage';
 import ShortUrlHandler from './ShortUrlHandler';
 import UserDetailsPage from './UserDetailsPage';
+import BusinessLoginPage from './BusinessLoginPage';
 
 const DashboardSwitcher = () => {
   const { user } = useAuth();
@@ -66,9 +64,10 @@ const App = () => {
             <Route path="/user-details" element={<UserDetailsPage />} />
             
             {/* Business App Routes */}
-            <Route path="/admin/login" element={<AdminLoginPage />} />
-            <Route path="/vendor/login" element={<VendorLoginPage />} />
-            <Route path="/support/login" element={<SupportLoginPage />} />
+            <Route path="/business-login" element={<BusinessLoginPage />} />
+            <Route path="/admin/login" element={<BusinessLoginPage />} />
+            <Route path="/vendor/login" element={<BusinessLoginPage />} />
+            <Route path="/support/login" element={<BusinessLoginPage />} />
             <Route path="/dashboard/*" element={
               <ProtectedRoute allowedRoles={['ADMIN', 'VENDOR', 'SUPPORT']}>
                 <DashboardSwitcher />
