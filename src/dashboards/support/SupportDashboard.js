@@ -19,6 +19,7 @@ const SupportDashboard = () => {
   const [visibleSections, setVisibleSections] = useState({});
   const [expandedPostId, setExpandedPostId] = useState(null);
   const [postContacts, setPostContacts] = useState({}); // Map of postId -> contacts array
+  const [creators, setCreators] = useState({}); // Map of postId -> creator details
 
   const { user } = useAuth();
   const userId = user?.id || sessionStorage.getItem("userId");
@@ -49,6 +50,13 @@ const SupportDashboard = () => {
         }
         if (!postComments[expandedPostId]) {
           fetchPostComments(expandedPostId);
+        }
+
+        // Fetch creator details if mobile number is not already available
+        const postedById = post.postedBy?.id || (typeof post.postedBy === 'string' ? post.postedBy : null);
+        const hasMobile = post.postedBy?.mobileNumber;
+        if (postedById && !creators[expandedPostId] && !hasMobile) {
+          fetchCreator(postedById, expandedPostId);
         }
       }
     }
@@ -132,6 +140,18 @@ const SupportDashboard = () => {
     }
   };
 
+  const fetchCreator = async (targetUserId, postId) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/v1/users/id/${targetUserId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCreators(prev => ({ ...prev, [postId]: data }));
+      }
+    } catch (error) {
+      console.error("Error fetching creator:", error);
+    }
+  };
+
   const handleAddComment = async (postId) => {
     const text = commentInputs[postId];
     if (!text?.trim()) return;
@@ -204,7 +224,13 @@ const SupportDashboard = () => {
               </button>
               <div className="card shadow-sm h-100">
                 <div className="card-header d-flex justify-content-between align-items-center bg-danger text-white">
-                   <span><strong>{post.postedByName || 'Unknown User'}</strong> - Emergency {post.postedFor?.name && `for ${post.postedFor.name}`}</span>
+                   <span>
+                     <strong>{post.postedByName || 'Unknown User'}</strong>
+                     {(post.postedBy?.mobileNumber || creators[post.id]?.mobileNumber) && (
+                       <span className="ms-2 text-light small">({post.postedBy?.mobileNumber || creators[post.id]?.mobileNumber})</span>
+                     )}
+                     <span> - Emergency {post.postedFor?.name && `for ${post.postedFor.name}`}</span>
+                   </span>
                    <small>{new Date(post.createdAt).toLocaleString()}</small>
                 </div>
                 <div className="card-body">
@@ -218,7 +244,10 @@ const SupportDashboard = () => {
                       <div className="col-md-6 mb-3">
                           {post.latitude && post.longitude && isLoaded ? (
                               <GoogleMap mapContainerStyle={mapContainerStyle} center={{ lat: parseFloat(post.latitude), lng: parseFloat(post.longitude) }} zoom={14}>
-                                  <Marker position={{ lat: parseFloat(post.latitude), lng: parseFloat(post.longitude) }} />
+                                  <Marker 
+                                    position={{ lat: parseFloat(post.latitude), lng: parseFloat(post.longitude) }} 
+                                    title={`Emergency Location - ${post.postedByName || 'Unknown User'}`}
+                                  />
                               </GoogleMap>
                           ) : <div className="bg-light d-flex align-items-center justify-content-center" style={{height: '350px'}}>No Location</div>}
                       </div>
