@@ -4,11 +4,48 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import UserLayout from './UserLayout';
 import API_BASE_URL from './config';
+import { Html5QrcodeScanner } from 'html5-qrcode';
+
+const QrScanner = ({ onScanSuccess, onScanFailure, closeScanner }) => {
+  useEffect(() => {
+    if (document.getElementById('qr-reader')?.innerHTML) {
+      return;
+    }
+    const config = {
+      fps: 10,
+      qrbox: { width: 250, height: 250 },
+      videoConstraints: { facingMode: "environment" }
+    };
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      "qr-reader",
+      config,
+      false
+    );
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    return () => {
+      if (html5QrcodeScanner && html5QrcodeScanner.getState() === 2) {
+        html5QrcodeScanner.clear().catch(error => console.error("Failed to clear scanner.", error));
+      }
+    };
+  }, []);
+
+  return (
+    <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
+      <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-content">
+          <div className="modal-header"><h5 className="modal-title">Scan Product QR Code</h5><button type="button" className="btn-close" onClick={closeScanner}></button></div>
+          <div className="modal-body"><div id="qr-reader"></div></div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const MyProductsPage = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showScanner, setShowScanner] = useState(false);
   const userId = sessionStorage.getItem("userId");
 
   useEffect(() => {
@@ -36,8 +73,37 @@ const MyProductsPage = () => {
     fetchProducts();
   }, [userId, navigate]);
 
+  const handleScanSuccess = (decodedText) => {
+    setShowScanner(false);
+    let productId = decodedText;
+    try {
+      const url = new URL(decodedText);
+      if (url.searchParams.has('uid')) {
+        productId = url.searchParams.get('uid');
+      }
+    } catch (_) {}
+    navigate(`/register?uid=${productId}`);
+  };
+
   return (
     <UserLayout pageTitle="My Registered Products">
+      {showScanner && (
+        <QrScanner
+          onScanSuccess={handleScanSuccess}
+          onScanFailure={() => {}}
+          closeScanner={() => setShowScanner(false)}
+        />
+      )}
+      
+      <button
+        className="btn btn-info rounded-circle position-fixed shadow"
+        onClick={() => setShowScanner(true)}
+        style={{ bottom: "90px", right: "20px", width: "56px", height: "56px", zIndex: 1050, color: 'white' }}
+        title="Register New Product"
+      >
+        <i className="bi bi-upc-scan fs-4"></i>
+      </button>
+
       <div className="container">
         {loading ? (
           <div className="text-center mt-5">
@@ -47,7 +113,7 @@ const MyProductsPage = () => {
           <div className="text-center mt-5">
             <i className="bi bi-box-seam fs-1 text-muted"></i>
             <p className="fs-5 text-muted mt-3">You haven't registered any products yet.</p>
-            <button className="btn btn-primary mt-2" onClick={() => navigate('/home')}>
+            <button className="btn btn-primary mt-2" onClick={() => setShowScanner(true)}>
               Scan to Register
             </button>
           </div>

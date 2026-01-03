@@ -73,33 +73,15 @@ const UserLayout = ({ children, pageTitle, hideNav = false }) => {
             </NavLink>
           </li>
           <li>
-            <NavLink to="/qr" style={({ isActive }) => ({ ...(isCollapsed ? collapsedNavLinkStyles : navLinkStyles), ...(isActive ? activeLinkStyles : {}) })} title="My QR Code">
-              <i className={`bi bi-qr-code fs-4 ${!isCollapsed ? 'me-3' : ''}`}></i>
-              {!isCollapsed && <span>My QR</span>}
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/my-products" style={({ isActive }) => ({ ...(isCollapsed ? collapsedNavLinkStyles : navLinkStyles), ...(isActive ? activeLinkStyles : {}) })} title="My Products">
-              <i className={`bi bi-box2-heart-fill fs-4 ${!isCollapsed ? 'me-3' : ''}`}></i>
-              {!isCollapsed && <span>Products</span>}
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/posts" style={({ isActive }) => ({ ...(isCollapsed ? collapsedNavLinkStyles : navLinkStyles), ...(isActive ? activeLinkStyles : {}) })} title="My Posts">
-              <i className={`bi bi-list-ul fs-4 ${!isCollapsed ? 'me-3' : ''}`}></i>
-              {!isCollapsed && <span>Posts</span>}
+            <NavLink to="/add-contact" style={({ isActive }) => ({ ...(isCollapsed ? collapsedNavLinkStyles : navLinkStyles), ...(isActive ? activeLinkStyles : {}) })} title="Add Contact">
+              <i className={`bi bi-person-plus-fill fs-4 ${!isCollapsed ? 'me-3' : ''}`}></i>
+              {!isCollapsed && <span>Add Contact</span>}
             </NavLink>
           </li>
           <li>
             <NavLink to="/np" style={({ isActive }) => ({ ...(isCollapsed ? collapsedNavLinkStyles : navLinkStyles), ...(isActive ? activeLinkStyles : {}) })} title="Notifications">
-              <i className={`bi bi-bell-fill fs-4 ${!isCollapsed ? 'me-3' : ''}`}></i>
-              {!isCollapsed && <span>Alerts</span>}
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/add-contact" style={({ isActive }) => ({ ...(isCollapsed ? collapsedNavLinkStyles : navLinkStyles), ...(isActive ? activeLinkStyles : {}) })} title="Add Contact">
-              <i className={`bi bi-person-plus-fill fs-4 ${!isCollapsed ? 'me-3' : ''}`}></i>
-              {!isCollapsed && <span>Add Contact</span>}
+              <i className={`bi bi-activity fs-4 ${!isCollapsed ? 'me-3' : ''}`}></i>
+              {!isCollapsed && <span>Activity</span>}
             </NavLink>
           </li>
           <li>

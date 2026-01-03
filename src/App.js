@@ -8,14 +8,12 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import SignUpPage from './SignUpPage';
 import OtpPage from './OtpPage';
-import HomePage from './HomePage';
 import AddContact from "./AddContact";
 import QrCodePage from "./QrCodePage";
 import ScanPage from "./ScanPage";
 import ThankYouPage from "./ThankYouPage";
-import PostListPage from "./PostListPage";
-import NotificationPage from "./NotificationPage";
 import NotificationDetailsPage from './NotificationDetailsPage';
+import NotificationPage from './NotificationPage';
 import ProtectedRoute from './ProtectedRoute';
 import AdminDashboard from './AdminDashboard';
 import RegisterProductPage from './RegisterProductPage';
@@ -49,17 +47,14 @@ const App = () => {
             <Route path="/" element={<SignUpPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/otp" element={<OtpPage />} />
-            <Route path="/home" element={<HomePage />} />
+            <Route path="/home" element={<MyProductsPage />} />
             <Route path="/add-contact" element={<AddContact />} />
             <Route path="/qr" element={<QrCodePage />} />
             <Route path="/scan" element={<ScanPage />} />
             <Route path="/q/:shortId" element={<ShortUrlHandler />} />
-            <Route path="/posts" element={<PostListPage />} />
             <Route path="/np" element={<NotificationPage />} />
-            <Route path="/thank-you" element={<ThankYouPage />} />
             <Route path="/notification-details/:postId" element={<NotificationDetailsPage />} />
             <Route path="/register" element={<RegisterProductPage />} />
-            <Route path="/my-products" element={<MyProductsPage />} />
             <Route path="/promotions/:id" element={<PromotionPreviewPage />} />
             <Route path="/user-details" element={<UserDetailsPage />} />
             

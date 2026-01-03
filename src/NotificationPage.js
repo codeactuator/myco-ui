@@ -14,6 +14,7 @@ const mapContainerStyle = {
 };
 
 const NotificationPage = () => {
+  const [activeTab, setActiveTab] = useState('alerts'); // 'alerts' or 'posts'
   const [posts, setPosts] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [postComments, setPostComments] = useState({});
@@ -43,7 +44,7 @@ const NotificationPage = () => {
         stompClientRef.current.deactivate();
       }
     };
-  }, []);
+  }, [activeTab]); // Re-fetch when tab changes
 
   const connectWebSocket = (postIds) => {
     if (stompClientRef.current) return;
@@ -53,20 +54,7 @@ const NotificationPage = () => {
       webSocketFactory: () => socket,
       reconnectDelay: 5000,
       onConnect: () => {
-        console.log("Connected to WebSocket");
-
-        postIds.forEach(postId => {
-          if (!subscribedPostIdsRef.current.has(postId)) {
-            stompClient.subscribe(`/topic/posts/${postId}/comments`, (message) => {
-              const comment = JSON.parse(message.body);
-              setPostComments(prev => ({
-                ...prev,
-                [postId]: [...(prev[postId] || []), comment]
-              }));
-            });
-            subscribedPostIdsRef.current.add(postId);
-          }
-        });
+        subscribeToPosts(postIds, stompClient);
       },
       onStompError: (frame) => {
         console.error('Broker error:', frame.headers['message'], frame.body);
@@ -77,11 +65,32 @@ const NotificationPage = () => {
     stompClientRef.current = stompClient;
   };
 
+  const subscribeToPosts = (postIds, client) => {
+    const stomp = client || stompClientRef.current;
+    if (!stomp || !stomp.connected) return;
+
+    postIds.forEach(postId => {
+      if (!subscribedPostIdsRef.current.has(postId)) {
+        stomp.subscribe(`/topic/posts/${postId}/comments`, (message) => {
+          const comment = JSON.parse(message.body);
+          setPostComments(prev => ({
+            ...prev,
+            [postId]: [...(prev[postId] || []), comment]
+          }));
+        });
+        subscribedPostIdsRef.current.add(postId);
+      }
+    });
+  };
+
   const fetchPosts = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/v1/posts/alerts/user/${userId}`);
+      const endpoint = activeTab === 'alerts' 
+        ? `${API_BASE_URL}/v1/posts/alerts/user/${userId}`
+        : `${API_BASE_URL}/v1/posts/by-user/${userId}`;
+        
+      const res = await fetch(endpoint);
       const data = await res.json();
-	  console.log(data);
 
       const postsWithImages = await Promise.all(data.map(async (post) => {
         const imagesRes = await fetch(`${API_BASE_URL}/v1/posts/${post.id}/files`);
@@ -93,6 +102,7 @@ const NotificationPage = () => {
 
       const postIds = postsWithImages.map(post => post.id);
       connectWebSocket(postIds);
+      subscribeToPosts(postIds); // Ensure subscription if already connected
     } catch (error) {
       setError('Error fetching posts or images');
     } finally {
@@ -156,7 +166,28 @@ const NotificationPage = () => {
   const closeExpandedMedia = () => setExpandedMedia(null);
 
   return (
-    <UserLayout pageTitle="Notifications">
+    <UserLayout pageTitle="Activity">
+      <div className="container mt-3">
+        <ul className="nav nav-pills nav-fill bg-white p-2 rounded shadow-sm">
+          <li className="nav-item">
+            <button 
+              className={`nav-link ${activeTab === 'alerts' ? 'active' : ''}`} 
+              onClick={() => setActiveTab('alerts')}
+            >
+              <i className="bi bi-bell-fill me-2"></i> Alerts (Inbox)
+            </button>
+          </li>
+          <li className="nav-item">
+            <button 
+              className={`nav-link ${activeTab === 'posts' ? 'active' : ''}`} 
+              onClick={() => setActiveTab('posts')}
+            >
+              <i className="bi bi-send-fill me-2"></i> My Posts (Sent)
+            </button>
+          </li>
+        </ul>
+      </div>
+
       {loading && <p className="text-center mt-4">Loading posts...</p>}
       {error && <p className="text-danger text-center mt-4">{error}</p>}
 
@@ -185,6 +216,7 @@ const NotificationPage = () => {
       )}
 
       <div className="container py-4">
+        {posts.length === 0 && !loading && <p className="text-center text-muted">No {activeTab === 'alerts' ? 'alerts' : 'posts'} found.</p>}
         <div className="row g-4">
           {posts.map((post) => (
             <div key={post.id} className="col-12 col-md-6 mb-4">

@@ -85,12 +85,20 @@ const RegisterProductPage = () => {
 
       // If the API call fails, we'll throw an error to be caught below.
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Failed to register product." }));
-        throw new Error(errorData.message);
+        const errorText = await response.text();
+        let errorMessage = "Failed to register product.";
+        try {
+          const errorJson = JSON.parse(errorText);
+          if (errorJson) errorMessage = errorJson.message || errorJson.error || errorMessage;
+        } catch (e) {
+          // If not JSON, use the raw text if it's not too long (e.g. HTML error page)
+          if (errorText && errorText.length < 200) errorMessage = errorText;
+        }
+        throw new Error(errorMessage);
       }
 
       toast.success(`Product ${uid} registered successfully!`);
-      navigate("/my-products"); // Redirect to a page showing user's products
+      navigate("/home"); // Redirect to home (products list)
 
     } catch (error) {
       console.error("Registration failed:", error);
