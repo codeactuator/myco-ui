@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import API_BASE_URL from "./config";
+import { apiFetch } from "./utils/api";
 
 const SignUpPage = () => {
   const [username, setUsername] = useState("");
@@ -45,49 +45,26 @@ const SignUpPage = () => {
 		let userId;
 
 		if (mode === "signup") {
-		  const response = await fetch(`${API_BASE_URL}/v1/users`, {
+		  const data = await apiFetch('/v1/users', {
 			method: "POST",
-			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ name: username, mobileNumber: mobile }),
 		  });
-
-		  const data = await response.json();
-
-		  if (!response.ok) {
-			throw new Error(data.message || "Signup failed");
-		  }
-
 		  userId = data.id;
 
 		} else {
 		  // For login, we don't check verification; just send OTP
-		  const response = await fetch(`${API_BASE_URL}/v1/users/verified`, {
+		  const data = await apiFetch('/v1/users/verified', {
 			method: "POST",
-			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ mobileNumber: mobile }),
 		  });
-
-		  const data = await response.json();
-
-		  if (!response.ok || !data.id) {
-			throw new Error(data.message || "Login failed");
-		  }
-
 		  userId = data.id;
 		}
 
 		// Send OTP (in both modes)
-		const otpResponse = await fetch(`${API_BASE_URL}/v1/otp/send`, {
+		await apiFetch('/v1/otp/send', {
 		  method: "POST",
-		  headers: { "Content-Type": "application/json" },
 		  body: JSON.stringify({ mobileNumber: mobile }),
 		});
-
-		const otpData = await otpResponse.json();
-
-		if (!otpResponse.ok) {
-		  throw new Error(otpData.message || "Failed to send OTP");
-		}
 
 		sessionStorage.setItem("userId", userId);
 		navigate("/otp", { state: { userId, mobileNumber: mobile } });

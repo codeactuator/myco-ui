@@ -32,7 +32,7 @@ const BusinessLoginPage = () => {
       navigate('/dashboard');
     } catch (err) {
       console.error(err);
-      setError('Invalid username or password');
+      setError(err.response?.data?.message || 'Invalid username or password');
     } finally {
       setLoading(false);
     }

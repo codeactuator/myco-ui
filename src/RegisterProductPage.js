@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import API_BASE_URL from './config';
 import UserLayout from './UserLayout';
+import { apiFetch } from './utils/api';
 
 const RegisterProductPage = () => {
   const location = useLocation();
@@ -10,6 +10,7 @@ const RegisterProductPage = () => {
   const [uid, setUid] = useState(null);
   const [userId, setUserId] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const resolveUid = async () => {
@@ -41,17 +42,11 @@ const RegisterProductPage = () => {
 
       // Resolve short code
       try {
-        const res = await fetch(`${API_BASE_URL}/v1/short-links/${shortCode}`);
-        if (res.ok) {
-          const data = await res.json();
-          setUid(data.uuid);
-        } else {
-          toast.error("Invalid product code.");
-          navigate("/home");
-        }
+        const data = await apiFetch(`/v1/short-links/${shortCode}`);
+        setUid(data.uuid);
       } catch (error) {
         console.error("Error resolving short code", error);
-        toast.error("Failed to resolve product code.");
+        toast.error("Invalid or expired product code.");
         navigate("/home");
       }
     };
@@ -75,34 +70,20 @@ const RegisterProductPage = () => {
     }
 
     setIsRegistering(true);
+    setError(null);
     try {
       // Make the API call to register the product
-      const response = await fetch(`${API_BASE_URL}/v1/products/register`, {
+      await apiFetch('/v1/products/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, productId: uid }),
+        body: JSON.stringify({ userId, productInstanceId: uid }),
       });
-
-      // If the API call fails, we'll throw an error to be caught below.
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorMessage = "Failed to register product.";
-        try {
-          const errorJson = JSON.parse(errorText);
-          if (errorJson) errorMessage = errorJson.message || errorJson.error || errorMessage;
-        } catch (e) {
-          // If not JSON, use the raw text if it's not too long (e.g. HTML error page)
-          if (errorText && errorText.length < 200) errorMessage = errorText;
-        }
-        throw new Error(errorMessage);
-      }
 
       toast.success(`Product ${uid} registered successfully!`);
       navigate("/home"); // Redirect to home (products list)
 
     } catch (error) {
       console.error("Registration failed:", error);
-      toast.error(error.message || "Failed to register product.");
+      setError(error.message || "Failed to register product.");
     } finally {
       setIsRegistering(false);
     }
@@ -113,6 +94,12 @@ const RegisterProductPage = () => {
       <div className="container">
         <div className="row justify-content-center">
           <div className="col-lg-6">
+            {error && (
+              <div className="alert alert-danger alert-dismissible fade show" role="alert">
+                {error}
+                <button type="button" className="btn-close" onClick={() => setError(null)} aria-label="Close"></button>
+              </div>
+            )}
             <div className="card shadow-sm">
               <div className="card-body text-center p-4">
                 {uid ? (<p className="fs-5">You are about to register product with ID: <br /><strong className="text-primary">{uid}</strong></p>) : <p>Loading product information...</p>}

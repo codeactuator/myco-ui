@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import API_BASE_URL from "./config";
+import { apiFetch } from "./utils/api";
 
 const OtpPage = () => {
   const location = useLocation();
@@ -50,18 +50,10 @@ const OtpPage = () => {
     const fullOtp = otp.join("");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/v1/otp/verify`, {
+      await apiFetch('/v1/otp/verify', {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
         body: JSON.stringify({ mobileNumber: mobileNumber, otp: fullOtp })
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "OTP verification failed");
-      }
 
       // Store userId in session storage upon successful verification
       sessionStorage.setItem("userId", userId);

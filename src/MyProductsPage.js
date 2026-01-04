@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import UserLayout from './UserLayout';
-import API_BASE_URL from './config';
 import { Html5QrcodeScanner } from 'html5-qrcode';
+import { apiFetch } from './utils/api';
 
 const QrScanner = ({ onScanSuccess, onScanFailure, closeScanner }) => {
   useEffect(() => {
@@ -56,13 +56,8 @@ const MyProductsPage = () => {
 
     const fetchProducts = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/v1/products/user/${userId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setProducts(data);
-        } else {
-          console.error("Failed to fetch products");
-        }
+        const data = await apiFetch(`/v1/products/user/${userId}`);
+        setProducts(data);
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {
@@ -75,14 +70,14 @@ const MyProductsPage = () => {
 
   const handleScanSuccess = (decodedText) => {
     setShowScanner(false);
-    let productId = decodedText;
+    let productInstanceId = decodedText;
     try {
       const url = new URL(decodedText);
       if (url.searchParams.has('uid')) {
-        productId = url.searchParams.get('uid');
+        productInstanceId = url.searchParams.get('uid');
       }
     } catch (_) {}
-    navigate(`/register?uid=${productId}`);
+    navigate(`/register?uid=${productInstanceId}`);
   };
 
   return (
@@ -94,7 +89,7 @@ const MyProductsPage = () => {
           closeScanner={() => setShowScanner(false)}
         />
       )}
-      
+
       <button
         className="btn btn-info rounded-circle position-fixed shadow"
         onClick={() => setShowScanner(true)}
@@ -130,7 +125,7 @@ const MyProductsPage = () => {
                     )}
                   </div>
                   <div className="card-body">
-                    <h5 className="card-title">{product.name || 'Product Name'}</h5>
+                    <h5 className="card-title mb-2">{product.name || 'Product Name'}</h5>
                     <p className="card-text text-muted small">
                       Registered: {product.registrationDate ? new Date(product.registrationDate).toLocaleDateString() : 'N/A'}
                     </p>

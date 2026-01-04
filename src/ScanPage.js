@@ -3,8 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import CaptureSection from './CaptureSection';
 import EmergencyModal from './EmergencyModal';
 import { base64ToBlob, resizeBase64Image } from './utils/imageUtils';
-import API_BASE_URL from './config';
 import UserLayout from './UserLayout';
+import { apiFetch } from './utils/api';
 
 const ScanPage = () => {
 	const location = useLocation();
@@ -58,13 +58,8 @@ const ScanPage = () => {
 
 			// Resolve short code
 			try {
-				const res = await fetch(`${API_BASE_URL}/v1/short-links/${shortCode}`);
-				if (res.ok) {
-					const data = await res.json();
-					setUid(data.uuid);
-				} else {
-					console.error("Failed to resolve short code");
-				}
+				const data = await apiFetch(`/v1/short-links/${shortCode}`);
+				setUid(data.uuid);
 			} catch (error) {
 				console.error("Error resolving short code", error);
 			} finally {
@@ -79,11 +74,8 @@ const ScanPage = () => {
 		if (uid) {
 			const fetchOwner = async () => {
 				try {
-					const res = await fetch(`${API_BASE_URL}/v1/products/owner/${uid}`);
-					if (res.ok) {
-						const data = await res.json();
-						setOwnerId(data);
-					}
+					const data = await apiFetch(`/v1/products/owner/${uid}`);
+					setOwnerId(data);
 				} catch (error) {
 					console.error("Error fetching product owner:", error);
 				}
@@ -132,16 +124,12 @@ const ScanPage = () => {
 		}
 
 		try {
-			const res = await fetch(`${API_BASE_URL}/v1/users/verified`, {
+			const data = await apiFetch('/v1/users/verified', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ mobileNumber: mobileNumber }),
 			});
 
-			const data = await res.json();
-			console.log(data);
-
-			if (res.ok && data.verified) {
+			if (data.verified) {
 				setUserId(data.id);
 				sessionStorage.setItem("userId", data.id); // ✅ Store in session
 				sessionStorage.setItem("userName", data.name || "User");
@@ -184,14 +172,8 @@ const ScanPage = () => {
 				}
 			}
 			try {
-				const res = await fetch(`${API_BASE_URL}/v1/short-links/${shortCode}`);
-				if (res.ok) {
-					const data = await res.json();
-					resolvedUid = data.uuid;
-				} else {
-					alert('Failed to resolve product link.');
-					return;
-				}
+				const data = await apiFetch(`/v1/short-links/${shortCode}`);
+				resolvedUid = data.uuid;
 			} catch (error) {
 				console.error('Error resolving short code', error);
 				alert('Error resolving product link.');
@@ -207,14 +189,8 @@ const ScanPage = () => {
 
 		let productOwnerId;
 		try {
-			const res = await fetch(`${API_BASE_URL}/v1/products/owner/${resolvedUid}`);
-			if (res.ok) {
-				productOwnerId = await res.json();
-				setOwnerId(productOwnerId);
-			} else {
-				alert('Could not find an owner for this product.');
-				return;
-			}
+			productOwnerId = await apiFetch(`/v1/products/owner/${resolvedUid}`);
+			setOwnerId(productOwnerId);
 		} catch (error) {
 			console.error('Error fetching product owner:', error);
 			alert('An error occurred while fetching the product owner.');
@@ -271,15 +247,13 @@ const ScanPage = () => {
 	const sendOtpToMobile = async () => {
 		setIsSendingOtp(true);
 		try {
-			const res = await fetch(`${API_BASE_URL}/v1/otp/send`, {
+			await apiFetch('/v1/otp/send', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ mobileNumber }),
 			});
-			const data = await res.json();
-			res.ok ? setOtpStarted(true) : alert(`❌ ${data.message}`);
-		} catch {
-			alert('Error sending OTP.');
+			setOtpStarted(true);
+		} catch (e) {
+			alert(`❌ ${e.message}`);
 		} finally {
 			setIsSendingOtp(false);
 		}
@@ -290,26 +264,21 @@ const ScanPage = () => {
 		if (code.length < 4 || mobileNumber.length < 10) return alert('Invalid input');
 		setIsVerifying(true);
 		try {
-			const res = await fetch(`${API_BASE_URL}/v1/otp/verify`, {
+			const data = await apiFetch('/v1/otp/verify', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ mobileNumber, otp: code }),
 			});
-			if (res.ok) {
-				const data = await res.json();
-				setUserId(data.id);
-				sessionStorage.setItem("userId", data.id); // ✅ Store in session
-				sessionStorage.setItem("userName", data.name || "User");
-				sessionStorage.setItem("userMobile", data.mobileNumber);
-				setStep('capture');
-				setShowModal(false);
-			} else {
-				alert('❌ Invalid OTP');
-				setOtp(['', '', '', '']);
-				document.getElementById('otp-0')?.focus();
-			}
-		} catch {
-			alert('Verification error');
+			
+			setUserId(data.id);
+			sessionStorage.setItem("userId", data.id); // ✅ Store in session
+			sessionStorage.setItem("userName", data.name || "User");
+			sessionStorage.setItem("userMobile", data.mobileNumber);
+			setStep('capture');
+			setShowModal(false);
+		} catch (e) {
+			alert(`❌ ${e.message}`);
+			setOtp(['', '', '', '']);
+			document.getElementById('otp-0')?.focus();
 		} finally {
 			setIsVerifying(false);
 		}
@@ -322,9 +291,8 @@ const ScanPage = () => {
 		}
 
 		try {
-			const res = await fetch(`${API_BASE_URL}/v1/call`, {
+			await apiFetch('/v1/call', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 				fromUserId: userId,
 				toUserId: ownerId,
@@ -334,16 +302,12 @@ const ScanPage = () => {
 			
 			let uploadSuccess = await uploadCapturedImage(ownerId);
 
-			if (res.ok && uploadSuccess) {
-				const data = await res.json();
+			if (uploadSuccess) {
 				setShowSuccessDialog(true);
 				navigate("/thank-you", { state: { userId, mobileNumber } });
-			} else {
-				const data = await res.json();
-				alert(`❌ ${data.message}`);
 			}
-		} catch {
-			alert('Call failed.');
+		} catch (e) {
+			alert(`❌ ${e.message}`);
 		}
 	};
 
@@ -371,9 +335,7 @@ const ScanPage = () => {
 
 		let postId;
 		try {
-			const res = await fetch(`${API_BASE_URL}/v1/posts`, { method: 'POST', body: formData });
-			if (!res.ok) return false;
-			const data = await res.json();
+			const data = await apiFetch('/v1/posts', { method: 'POST', body: formData });
 			postId = data.id;
 		} catch (e) {
 			console.error("Error creating post", e);
@@ -386,7 +348,7 @@ const ScanPage = () => {
 			const blob = base64ToBlob(resized);
 			const fd = new FormData();
 			fd.append('file', blob, `captured-${i + 1}.jpg`);
-			await fetch(`${API_BASE_URL}/v1/posts/${postId}/files`, { method: 'POST', body: fd });
+			await apiFetch(`/v1/posts/${postId}/files`, { method: 'POST', body: fd });
 		}
 
 		return true;

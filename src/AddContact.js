@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API_BASE_URL from './config';
 import UserLayout from './UserLayout';
 import OtpInputs from './OtpInputs';
+import { apiFetch } from './utils/api';
 
 const AddContact = () => {
   const navigate = useNavigate();
@@ -29,11 +29,8 @@ const AddContact = () => {
 
   const fetchContacts = async (userId) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/v1/contacts/${userId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setContacts(data);
-      }
+      const data = await apiFetch(`/v1/contacts/${userId}`);
+      setContacts(data);
     } catch (err) {
       console.error("Failed to fetch contacts", err);
     }
@@ -43,11 +40,7 @@ const AddContact = () => {
     if (!window.confirm("Are you sure you want to delete this contact?")) return;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/v1/contacts/${contactId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Failed to delete contact");
-
+      await apiFetch(`/v1/contacts/${contactId}`, { method: "DELETE" });
       setContacts((prev) => prev.filter((c) => c.id !== contactId));
     } catch (err) {
       alert(err.message);
@@ -72,13 +65,10 @@ const AddContact = () => {
     setError("");
 
     try {
-      const res = await fetch(`${API_BASE_URL}/v1/otp/send`, {
+      await apiFetch('/v1/otp/send', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mobileNumber: number }),
       });
-      
-      if (!res.ok) throw new Error("Failed to send OTP.");
       
       setStep('otp');
     } catch (err) {
@@ -101,36 +91,28 @@ const AddContact = () => {
 
     try {
       // 1. Verify OTP
-      const verifyRes = await fetch(`${API_BASE_URL}/v1/otp/verify`, {
+      await apiFetch('/v1/otp/verify', {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobileNumber: number, otp: fullOtp })
       });
 
-      if (!verifyRes.ok) throw new Error("Invalid OTP");
-
       // 2. Ensure Contact is a User
       let contactUserId;
-      const userCheckRes = await fetch(`${API_BASE_URL}/v1/users/${number}`);
-      if (userCheckRes.ok) {
-        const userData = await userCheckRes.json();
+      try {
+        const userData = await apiFetch(`/v1/users/${number}`);
         contactUserId = userData.id;
-      } else {
+      } catch (e) {
         // Create User if not exists
-        const createUserRes = await fetch(`${API_BASE_URL}/v1/users`, {
+        const newUserData = await apiFetch('/v1/users', {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: name, mobileNumber: number }),
         });
-        if (!createUserRes.ok) throw new Error("Failed to register contact as user");
-        const newUserData = await createUserRes.json();
         contactUserId = newUserData.id;
       }
 
       // 3. Save Contact
-      const response = await fetch(`${API_BASE_URL}/v1/contacts`, {
+      await apiFetch('/v1/contacts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contactName: name,
           contactNumber: number,
@@ -138,10 +120,6 @@ const AddContact = () => {
           appUser: { id: userId }
         }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to add contact.");
-      }
 
       setName('');
       setNumber('');
