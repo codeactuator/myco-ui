@@ -1,10 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../DashboardLayout';
 import SupportDashboard from './SupportDashboard';
 import SupportAnalytics from './SupportAnalytics';
 
 const SupportView = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem("systemUser") || sessionStorage.getItem("user");
+    let foundName = null;
+
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        foundName = parsedUser.username || parsedUser.name;
+      } catch (error) {
+        console.error("Error parsing user from session storage", error);
+      }
+    }
+
+    if (!foundName) {
+      const storedName = sessionStorage.getItem("userName");
+      if (storedName && storedName !== "undefined") {
+        foundName = storedName;
+      }
+    }
+
+    if (foundName) setUsername(foundName);
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -35,7 +59,7 @@ const SupportView = () => {
   );
 
   return (
-    <DashboardLayout panelTitle="Support Panel" navItems={navItems}>
+    <DashboardLayout panelTitle={`Support Panel${username ? ` - ${username}` : ''}`} navItems={navItems}>
       {renderContent()}
     </DashboardLayout>
   );

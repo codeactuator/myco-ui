@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from './DashboardLayout';
 import ManageVendors from './dashboards/admin/ManageVendors';
 import ManageOrders from './dashboards/admin/ManageOrders';
@@ -6,6 +6,19 @@ import ManageUsers from './dashboards/admin/ManageUsers';
 
 const AdminView = () => {
   const [activeTab, setActiveTab] = useState('manage-orders');
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem("systemUser") || sessionStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser.username) setUsername(parsedUser.username);
+      } catch (error) {
+        console.error("Error parsing user from session storage", error);
+      }
+    }
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -44,7 +57,7 @@ const AdminView = () => {
   );
 
   return (
-    <DashboardLayout panelTitle="Admin Panel" navItems={navItems}>
+    <DashboardLayout panelTitle={`Admin Panel${username ? ` - ${username}` : ''}`} navItems={navItems}>
       {renderContent()}
     </DashboardLayout>
   );

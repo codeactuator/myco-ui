@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from './DashboardLayout';
 import PromotionsPage from './dashboards/vendor/PromotionsPage';
 import AnalyticsDashboard from './dashboards/vendor/AnalyticsDashboard';
@@ -10,6 +10,19 @@ import { useAuth } from './AuthContext';
 const VendorView = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem("systemUser") || sessionStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser.username) setUsername(parsedUser.username);
+      } catch (error) {
+        console.error("Error parsing user from session storage", error);
+      }
+    }
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -64,7 +77,7 @@ const VendorView = () => {
   );
 
   return (
-    <DashboardLayout panelTitle="Vendor Panel" navItems={navItems}>
+    <DashboardLayout panelTitle={`Vendor Panel${username ? ` - ${username}` : ''}`} navItems={navItems}>
       {renderContent()}
     </DashboardLayout>
   );

@@ -33,6 +33,7 @@ const SupportDashboard = () => {
 
   useEffect(() => {
     fetchPosts();
+
     return () => {
       if (stompClientRef.current) {
         stompClientRef.current.deactivate();
@@ -190,7 +191,9 @@ const SupportDashboard = () => {
 
   return (
     <div className="container-fluid">
-      <h4 className="mb-4">Emergency Requests</h4>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4 className="mb-0">Emergency Requests</h4>
+      </div>
       {loading && <p>Loading requests...</p>}
       {error && <p className="text-danger">{error}</p>}
       

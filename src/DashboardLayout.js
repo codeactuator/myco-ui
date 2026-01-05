@@ -70,7 +70,7 @@ const DashboardLayout = ({ panelTitle, navItems, children }) => {
         </div>
         <div className="d-flex align-items-center text-white">
           <i className="bi bi-person-circle fs-4 me-2"></i>
-          <strong>{user?.name || 'User'}</strong>
+          <strong>{user?.name || user?.username || 'User'}</strong>
           <button className="btn btn-link text-white text-decoration-none ms-2" onClick={handleLogout} title="Sign Out">
             <i className="bi bi-box-arrow-left fs-5"></i>
           </button>
