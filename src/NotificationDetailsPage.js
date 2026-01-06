@@ -159,14 +159,14 @@ const NotificationDetailsPage = () => {
           {images.length > 0 ? (
             <div className="position-relative">
               <img
-                src={`${API_BASE_URL}/v1/uploads/${images[0].filePath.split(/[/\\]/).pop()}`}
+                src={images[0].filePath.startsWith('http') ? images[0].filePath : `${API_BASE_URL}/v1/uploads/${images[0].filePath.split(/[/\\]/).pop()}`}
                 alt="Post visual"
                 className="card-img-bottom"
                 style={{ objectFit: 'cover', height: '300px' }}
               />
               <button 
                   className="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 opacity-75"
-                  onClick={(e) => handleExpandImage(e, `${API_BASE_URL}/v1/uploads/${images[0].filePath.split(/[/\\]/).pop()}`)}
+                  onClick={(e) => handleExpandImage(e, images[0].filePath.startsWith('http') ? images[0].filePath : `${API_BASE_URL}/v1/uploads/${images[0].filePath.split(/[/\\]/).pop()}`)}
               >
                   <i className="bi bi-arrows-fullscreen"></i>
               </button>

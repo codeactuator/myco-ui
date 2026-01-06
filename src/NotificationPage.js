@@ -242,7 +242,7 @@ const NotificationPage = () => {
                   {post.images && post.images.length > 0 ? (
                     <>
                       <img
-                        src={`${API_BASE_URL}/v1/uploads/${post.images[0].filePath.split(/[/\\]/).pop()}`}
+                        src={post.images[0].filePath.startsWith('http') ? post.images[0].filePath : `${API_BASE_URL}/v1/uploads/${post.images[0].filePath.split(/[/\\]/).pop()}`}
                         alt="Post"
                         className="card-img-top"
                         style={{ objectFit: 'cover', height: '200px' }}
@@ -251,7 +251,7 @@ const NotificationPage = () => {
                       />
                       <button 
                           className="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 opacity-75"
-                          onClick={(e) => handleExpandImage(e, `${API_BASE_URL}/v1/uploads/${post.images[0].filePath.split(/[/\\]/).pop()}`)}
+                          onClick={(e) => handleExpandImage(e, post.images[0].filePath.startsWith('http') ? post.images[0].filePath : `${API_BASE_URL}/v1/uploads/${post.images[0].filePath.split(/[/\\]/).pop()}`)}
                       >
                           <i className="bi bi-arrows-fullscreen"></i>
                       </button>

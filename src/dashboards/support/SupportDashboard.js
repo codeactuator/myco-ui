@@ -241,7 +241,7 @@ const SupportDashboard = () => {
                    <div className="row">
                       <div className="col-md-6 mb-3">
                           {post.images && post.images.length > 0 ? (
-                              <img src={`${API_BASE_URL}/v1/uploads/${post.images[0].filePath.split(/[/\\]/).pop()}`} alt="Evidence" className="img-fluid rounded" style={{ objectFit: 'cover', height: '350px', width: '100%' }} />
+                              <img src={post.images[0].filePath.startsWith('http') ? post.images[0].filePath : `${API_BASE_URL}/v1/uploads/${post.images[0].filePath.split(/[/\\]/).pop()}`} alt="Evidence" className="img-fluid rounded" style={{ objectFit: 'cover', height: '350px', width: '100%' }} />
                           ) : <div className="bg-light d-flex align-items-center justify-content-center" style={{height: '350px'}}>No Image</div>}
                       </div>
                       <div className="col-md-6 mb-3">

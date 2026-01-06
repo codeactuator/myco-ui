@@ -171,7 +171,7 @@ const PostListPage = () => {
                 <div className="position-relative">
                   {post.images && post.images.length > 0 ? (
                     <img
-                      src={`${API_BASE_URL}/v1/uploads/${post.images[0].filePath.split(/[/\\]/).pop()}`}
+                      src={post.images[0].filePath.startsWith('http') ? post.images[0].filePath : `${API_BASE_URL}/v1/uploads/${post.images[0].filePath.split(/[/\\]/).pop()}`}
                       alt="Post"
                       className="card-img-top"
                       style={{ objectFit: 'cover', height: '200px' }}
