@@ -140,8 +140,14 @@ const ScanPage = () => {
 				await sendOtpToMobile();
 				setStep('otp');
 			}
-		} catch {
-			alert('Error verifying user.');
+		} catch (error) {
+			// If user is not found (404) or verification check fails, proceed to OTP
+			try {
+				await sendOtpToMobile();
+				setStep('otp');
+			} catch (e) {
+				alert('Error sending OTP: ' + e.message);
+			}
 		}
 	};
 

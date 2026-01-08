@@ -5,6 +5,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import UserLayout from './UserLayout';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { apiFetch } from './utils/api';
+import API_BASE_URL from './config';
 
 const QrScanner = ({ onScanSuccess, onScanFailure, closeScanner }) => {
   useEffect(() => {
@@ -119,7 +120,7 @@ const MyProductsPage = () => {
                 <div className="card shadow-sm h-100">
                   <div className="bg-light d-flex align-items-center justify-content-center" style={{ height: '200px' }}>
                     {product.imageUrl ? (
-                      <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={product.imageUrl.startsWith('http') ? product.imageUrl : `${API_BASE_URL}/v1/uploads/${product.imageUrl}`} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <i className="bi bi-bag-check fs-1 text-secondary"></i>
                     )}
